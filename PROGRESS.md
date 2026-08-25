@@ -4,7 +4,7 @@ Last updated: 25 August 2026
 
 ## Overall status
 
-**Phase 4 — Publishing: in progress**
+**MVP complete and published**
 
 ## Milestones
 
@@ -24,11 +24,11 @@ Last updated: 25 August 2026
 - [x] Add focused parser and ranking tests
 - [x] Complete desktop and 390px mobile demo-flow QA
 - [x] Pass lint, typecheck, tests, and production build
-- [ ] Publish the validated MVP
+- [x] Publish the validated MVP
 
 ## Current focus
 
-Publishing the validated MVP and synchronising the completed implementation to GitHub.
+The complete MVP is live at [railease-journey-planner.nishiajmera21.chatgpt.site](https://railease-journey-planner.nishiajmera21.chatgpt.site). Future work can focus on authorised live railway data and production integrations.
 
 ## Verification
 

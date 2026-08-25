@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     title: 'RailEase — Journeys that actually work for you',
     description: 'A calm, explainable railway journey planner built for confident choices.',
     type: 'website',
-    images: [{ url: 'http://localhost:3000/og.png', width: 1200, height: 630, alt: 'RailEase — Journeys that actually work for you.' }],
+    images: [{ url: 'https://railease-journey-planner.nishiajmera21.chatgpt.site/og.png', width: 1200, height: 630, alt: 'RailEase — Journeys that actually work for you.' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'RailEase — Journeys that actually work for you',
     description: 'A calm, explainable railway journey planner built for confident choices.',
-    images: ['http://localhost:3000/og.png'],
+    images: ['https://railease-journey-planner.nishiajmera21.chatgpt.site/og.png'],
   },
 };
 

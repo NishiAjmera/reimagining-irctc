@@ -2,6 +2,8 @@
 
 RailEase is a polished hackathon MVP for **Build What Moves India 2026**. It helps travellers move from a broad train search to a small set of viable, understandable journey choices.
 
+**Live demo:** [railease-journey-planner.nishiajmera21.chatgpt.site](https://railease-journey-planner.nishiajmera21.chatgpt.site)
+
 > **The objective is not to help users search more efficiently. It is to reduce the number of railway decisions they have to make unaided.**
 
 ## The problem

@@ -4,7 +4,7 @@ Last updated: 25 August 2026
 
 ## Overall status
 
-**Phase 1 — Foundation: in progress**
+**Phase 4 — Publishing: in progress**
 
 ## Milestones
 
@@ -12,29 +12,44 @@ Last updated: 25 August 2026
 - [x] Define primary AI-assisted journey flow
 - [x] Define traditional-search fallback flow
 - [x] Define explainable ranked-result model
-- [x] Initialize repository documentation
-- [ ] Scaffold the frontend application
-- [ ] Build responsive home and search experiences
-- [ ] Build editable intent constraints
-- [ ] Build the purposeful search transition
-- [ ] Build ranked journey recommendation cards
-- [ ] Add contextual railway explanations
-- [ ] Add selection and mock booking handoff
-- [ ] Add responsive and accessibility QA
-- [ ] Prepare hackathon demo and deployment
+- [x] Scaffold the Next.js, React, and TypeScript application
+- [x] Build responsive home and search experiences
+- [x] Build editable intent constraints
+- [x] Build the purposeful search transition
+- [x] Build ranked journey recommendation cards
+- [x] Add contextual railway explanations
+- [x] Add selection and mock booking handoff
+- [x] Add deterministic ranking and no-results alternatives
+- [x] Add prototype analytics for time to confident choice
+- [x] Add focused parser and ranking tests
+- [x] Complete desktop and 390px mobile demo-flow QA
+- [x] Pass lint, typecheck, tests, and production build
+- [ ] Publish the validated MVP
 
 ## Current focus
 
-Repository setup, technical foundation, and translating the product brief into an implementation plan.
+Publishing the validated MVP and synchronising the completed implementation to GitHub.
+
+## Verification
+
+- Intent parser correctly extracts the primary Bengaluru → Jaipur scenario.
+- Confirmed, on-time 3A ranks above cheaper waitlisted choices.
+- Late-arriving journeys receive the hard-constraint penalty.
+- The confirmed Thursday alternative is surfaced.
+- Senior-traveller comfort receives a ranking bonus.
+- Routes without direct matches return practical alternatives.
+- The 90-second hero journey was completed through prototype booking handoff.
+- Traditional Indore → Delhi search reaches the priority-selection step.
 
 ## Decisions
 
-- Optimize for **time to confident choice**, not raw click count.
-- Keep AI contextual and embedded in the journey-planning flow.
-- Show three to five viable options rather than a dense train table.
+- Optimise for **time to confident choice**, not raw click count.
+- Keep intent parsing and explanations behind replaceable interfaces.
+- Keep ranking deterministic, readable, and independently tested.
+- Show three viable options rather than a dense train table.
 - Use simulated data; do not integrate with live IRCTC services.
-- Keep every recommendation and trade-off understandable in plain English.
+- Never present confirmation confidence as a guarantee.
 
 ## Update convention
 
-This file is updated at each milestone. GitHub issues will hold implementation work, while commits provide a chronological delivery record.
+This file is updated at each milestone. GitHub Issue #1 is the implementation tracker, while commits provide the chronological delivery record.

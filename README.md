@@ -1,39 +1,104 @@
-# RailEase — AI Journey Planner
+# RailEase — AI-assisted railway journey planning
 
-RailEase is a hackathon MVP for **Build What Moves India 2026**. It rethinks railway journey planning around one goal: helping travellers make a confident choice quickly.
+RailEase is a polished hackathon MVP for **Build What Moves India 2026**. It helps travellers move from a broad train search to a small set of viable, understandable journey choices.
 
-Instead of presenting a dense list of trains, RailEase understands travel intent, turns it into editable constraints, compares viable combinations across trains, classes, dates, and nearby stations, and recommends a small set of explainable options.
+> **The objective is not to help users search more efficiently. It is to reduce the number of railway decisions they have to make unaided.**
 
-## Product promise
+## The problem
 
-> From “search trains” to “help me get there.”
+Traditional railway search makes the traveller compare trains, classes, dates, stations, availability codes, timing, fare, and risk by themselves. RailEase turns those inputs into a decision: three practical options, why each fits, and the trade-off involved.
 
-The AI acts as a decision layer—not a generic chatbot. Every recommendation should explain why it fits, what the traveller trades off, and what railway terms mean in plain language.
+## Product thesis
 
-## MVP scope
+RailEase optimises for **time to confident choice**. AI is embedded as an intent and explanation layer—not presented as a generic chatbot. Deterministic logic handles ranking so every recommendation remains stable, transparent, and testable.
 
-- Natural-language and structured journey search
-- Editable intent and constraint extraction
-- Ranked, explainable journey recommendations
-- Simulated availability and confirmation confidence
-- Contextual answers about RAC, waitlist, classes, and berth preferences
-- Responsive desktop and mobile experience
-- Mock booking handoff
+## Working MVP
 
-The prototype intentionally excludes live IRCTC integration, payments, authentication, passenger forms, Tatkal, cancellations, and non-rail travel.
+- Natural-language journey planning with a reliable demo shortcut
+- Traditional origin, destination, date, and passenger search
+- Local intent extraction with editable constraints
+- Nearby-date, nearby-station, class, availability, timing, comfort, and fare consideration
+- Three ranked recommendation cards with reasons and explicit trade-offs
+- Plain-language explanations for railway classes, RAC, and waitlist
+- Contextual questions tied to the selected journey
+- Responsive booking summary and safe prototype handoff
+- Client-side product analytics for time to results and time to selection
+- Useful alternatives instead of a blank no-results state
 
-## Hero demo
+## Architecture
 
-The primary flow plans a Bengaluru-to-Jaipur wedding trip for three travellers, including an older family member, with arrival before 4 PM and confirmed seats strongly preferred. The experience compares three strong options and makes the comfort, price, timing, and certainty trade-offs explicit.
+The application lives in [`web/`](./web) and uses Next.js App Router, React, TypeScript, Tailwind CSS, and the OpenAI Sites runtime.
 
-## Progress
+```text
+web/
+├── app/                    # Application shell, metadata, and visual system
+├── components/journey/     # Search, constraints, results, Q&A, and handoff UI
+├── components/railway/     # Reusable accessible terminology explanations
+├── lib/data/               # Stations and simulated train availability
+├── lib/intent/             # Parser interface and local heuristic parser
+├── lib/ranking/            # Transparent scoring and recommendation selection
+├── lib/explanation/        # Railway terms and contextual explanations
+├── lib/analytics.ts        # Console/local-storage prototype analytics
+└── types/                  # Strong shared journey types
+```
 
-Project progress is tracked in [PROGRESS.md](./PROGRESS.md). Major milestones will also be recorded as GitHub commits and issues.
+## How AI is used
 
-## Status
+`IntentParser` separates the product contract from its implementation. The current `LocalIntentParser` understands the complete demo flow without an API key. A future hosted model adapter can implement the same interface for broader free-form language while preserving the local fallback.
 
-Repository setup and product planning are in progress. Implementation is the next milestone.
+The `JourneyExplainer`-style helpers answer common contextual questions locally. They can later be enhanced by a model, but the demo never depends on one.
 
-## Disclaimer
+## Why ranking is deterministic
 
-This is a hackathon prototype using simulated railway data. It is not affiliated with IRCTC or Indian Railways and does not complete real bookings.
+The scoring algorithm starts from a base score and applies readable weights:
+
+- Arrival deadline: `+30` when satisfied, `-60` when violated
+- Confirmed: `+30`; RAC: `+5`; waitlist: `-20` to `-50`
+- Preferred date: `+15`; flexible alternative date: `+5`
+- Comfortable AC sleeper for a senior traveller: `+10`
+- Fare, duration, and nearby-station adjustments
+
+The selection layer then surfaces the best overall choice, a viable budget choice, and a strong nearby-date alternative. The UI exposes the key score contributions instead of hiding them behind an opaque confidence claim.
+
+## Run locally
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Then open `http://localhost:3000`.
+
+Quality checks:
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+## Demo scenario
+
+Use **Try demo journey** or paste:
+
+> I need to travel from Bengaluru to Jaipur next Friday for a wedding. I need to reach by 4 PM. We’re three people including my mother, and I don’t want a waitlisted ticket.
+
+The app extracts the constraints, recommends a confirmed 3A overnight journey, explains the confirmed Sleeper budget trade-off, surfaces a Thursday availability alternative, answers “What does RAC mean?”, and completes a mocked booking handoff.
+
+## What is mocked
+
+Train schedules, fares, availability, confirmation confidence, station distance, and booking handoff are local prototype data. RailEase does not connect to IRCTC, collect passenger details, process payments, or guarantee future availability.
+
+## Future integrations
+
+- Authorised live train, schedule, fare, and availability data
+- Hosted intent parser and free-form journey explanation adapter
+- Secure handoff into an official reservation flow
+- Saved trips, language localisation, and richer accessibility preferences
+- Real product analytics and ranking evaluation
+
+## Success metrics
+
+The north-star metric is **time to confident choice**, supported by journey-start, time-to-results, recommendation-explanation, contextual-question, selection, and handoff events. Prototype events are stored locally in the browser and printed to the console.

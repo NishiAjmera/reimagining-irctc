@@ -1,9 +1,10 @@
 'use client';
 
-import { ArrowLeft, ArrowRight, CalendarDays, Check, Languages, LockKeyhole, MapPin, Menu, Search, ShieldCheck, TrainFront, UserRound, Users, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CalendarDays, Check, Languages, LockKeyhole, MapPin, Menu, Search, Send, ShieldCheck, TrainFront, UserRound, Users, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { track } from '@/lib/analytics';
 import { cityNames } from '@/lib/data/stations';
+import { explainQuestion, suggestedQuestions } from '@/lib/explanation/recommendation';
 import { intentParser } from '@/lib/intent/parser';
 import { rankJourneys } from '@/lib/ranking/rankJourneys';
 import type { JourneyIntent, JourneyOption, SearchOutcome } from '@/types/journey';
@@ -12,7 +13,7 @@ import { ContextQuestions } from './ContextQuestions';
 import { JourneyCard } from './JourneyCard';
 import { PriorityPanel } from './PriorityPanel';
 
-type Stage = 'home' | 'constraints' | 'searching' | 'results' | 'booking' | 'handoff';
+type Stage = 'home' | 'chat' | 'constraints' | 'searching' | 'results' | 'booking' | 'handoff';
 type SearchMode = 'describe' | 'structured';
 type DataSource = 'sample' | 'railradar';
 
@@ -35,6 +36,7 @@ export function JourneyPlanner() {
   const [outcome, setOutcome] = useState<SearchOutcome | null>(null);
   const [dataSource, setDataSource] = useState<DataSource>('sample');
   const [selected, setSelected] = useState<JourneyOption | null>(null);
+  const [bookingOrigin, setBookingOrigin] = useState<'chat' | 'results'>('results');
   const [error, setError] = useState('');
   const [mobileNav, setMobileNav] = useState(false);
   const startedAt = useRef<number | null>(null);
@@ -44,9 +46,7 @@ export function JourneyPlanner() {
 
   const submitAI = () => {
     if (!query.trim()) { setError('Tell us where you want to go—or try the demo journey.'); return; }
-    const parsed = intentParser.parse(query);
-    if (!parsed.originCity || !parsed.destinationCity) { setError('Add both your origin and destination so we can plan the journey.'); return; }
-    setError(''); setIntent(parsed); setStage('constraints'); track('intent_submitted', { mode: 'natural_language' });
+    setError(''); setStage('chat'); track('intent_submitted', { mode: 'conversation' });
   };
 
   const submitStructured = () => {
@@ -78,6 +78,7 @@ export function JourneyPlanner() {
   };
 
   const choose = (journey: JourneyOption) => {
+    setBookingOrigin(stage === 'chat' ? 'chat' : 'results');
     setSelected(journey); setStage('booking');
     track('journey_selected', { journeyId: journey.id, timeToSelectionMs: resultsAt.current ? Date.now() - resultsAt.current : undefined });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -92,11 +93,12 @@ export function JourneyPlanner() {
       {authenticated ? <Header onHome={reset} onSignOut={() => { reset(); setAuthenticated(false); }} mobileOpen={mobileNav} setMobileOpen={setMobileNav} /> : null}
       {authenticated ? <>
       {stage === 'home' ? <HomeSearch mode={mode} setMode={setMode} query={query} setQuery={setQuery} structured={structured} setStructured={setStructured} error={error} tryDemo={tryDemo} submitAI={submitAI} submitStructured={submitStructured} /> : null}
+      {stage === 'chat' ? <ConversationWorkspace initialQuery={query} onIntentChange={setIntent} onChoose={choose} /> : null}
       {stage === 'constraints' && intent ? <ConstraintPanel intent={intent} onChange={setIntent} onSearch={search} onBack={() => setStage('home')} /> : null}
       {stage === 'searching' && intent ? <Searching intent={intent} /> : null}
       {stage === 'results' && intent && outcome ? <Results intent={intent} outcome={outcome} dataSource={dataSource} onEdit={() => setStage('constraints')} onChoose={choose} onDemo={() => { setQuery(DEMO_PROMPT); setStage('home'); }} /> : null}
-      {stage === 'booking' && intent && selected ? <Booking intent={intent} journey={selected} onBack={() => setStage('results')} onHandoff={() => { setStage('handoff'); track('booking_handoff_clicked', { journeyId: selected.id }); }} /> : null}
-      {stage === 'handoff' && intent && selected ? <Handoff journey={selected} intent={intent} onChange={() => setStage('results')} onHome={reset} /> : null}
+      {stage === 'booking' && intent && selected ? <Booking intent={intent} journey={selected} onBack={() => setStage(bookingOrigin)} onHandoff={() => { setStage('handoff'); track('booking_handoff_clicked', { journeyId: selected.id }); }} /> : null}
+      {stage === 'handoff' && intent && selected ? <Handoff journey={selected} intent={intent} onChange={() => setStage(bookingOrigin)} onHome={reset} /> : null}
       </> : null}
     </main>
   );
@@ -140,6 +142,173 @@ function HomeSearch({ mode, setMode, query, setQuery, structured, setStructured,
 
 function StructuredSearch({ value, onChange, onSubmit, error }: { value: typeof emptyStructured; onChange: (value: typeof emptyStructured) => void; onSubmit: () => void; error: string }) {
   return <div className="planner-body structured-body"><div className="planner-heading"><div><p className="section-label">Journey details</p><h2 id="planner-title">Search trains</h2></div></div><div className="structured-grid"><label>From<input list="major-cities" value={value.origin} onChange={(event) => onChange({ ...value, origin: event.target.value })} /></label><button className="swap-button" type="button" aria-label="Swap origin and destination" onClick={() => onChange({ ...value, origin: value.destination, destination: value.origin })}>⇄</button><label>To<input list="major-cities" value={value.destination} onChange={(event) => onChange({ ...value, destination: event.target.value })} /></label><label>Date<input type="date" value={value.date} onChange={(event) => onChange({ ...value, date: event.target.value })} /></label><label>Travellers<input type="number" min="1" max="8" value={value.passengers} onChange={(event) => onChange({ ...value, passengers: Number(event.target.value) })} /></label></div><datalist id="major-cities">{cityNames.map((city) => <option value={city} key={city} />)}</datalist>{error ? <p className="form-error" role="alert">{error}</p> : null}<div className="planner-actions"><span /><button className="primary-button" type="button" onClick={onSubmit}>Continue <ArrowRight size={18} /></button></div></div>;
+}
+
+type ChatStep = 'route' | 'date' | 'passengers' | 'preference' | 'confirm';
+type ChatMessage = { id: number; role: 'assistant' | 'user'; text: string };
+type ChatPanel = 'details' | 'searching' | 'results';
+
+function ConversationWorkspace({ initialQuery, onIntentChange, onChoose }: { initialQuery: string; onIntentChange: (intent: JourneyIntent) => void; onChoose: (journey: JourneyOption) => void }) {
+  const initialIntent = intentParser.parse(initialQuery);
+  const initialStep = getInitialChatStep(initialQuery, initialIntent);
+  const [draft, setDraft] = useState(initialIntent);
+  const [step, setStep] = useState<ChatStep>(initialStep);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { id: 1, role: 'user', text: initialQuery },
+    { id: 2, role: 'assistant', text: chatQuestion(initialStep, initialIntent) },
+  ]);
+  const [reply, setReply] = useState('');
+  const [panel, setPanel] = useState<ChatPanel>('details');
+  const [chatOutcome, setChatOutcome] = useState<SearchOutcome | null>(null);
+  const [source, setSource] = useState<DataSource>('sample');
+  const threadEnd = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => { onIntentChange(draft); }, [draft, onIntentChange]);
+  useEffect(() => { threadEnd.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, [messages]);
+
+  const addAssistant = (text: string) => setMessages((current) => [...current, { id: Date.now() + 1, role: 'assistant', text }]);
+  const updateDraft = (next: JourneyIntent) => { setDraft(next); setPanel('details'); setChatOutcome(null); };
+
+  const handleReply = (value: string) => {
+    const text = value.trim();
+    if (!text) return;
+    setReply('');
+    setMessages((current) => [...current, { id: Date.now(), role: 'user', text }]);
+
+    if (panel === 'results' && chatOutcome?.options[0]) {
+      window.setTimeout(() => addAssistant(explainQuestion(text, chatOutcome.options[0], draft)), 160);
+      return;
+    }
+
+    if (step === 'confirm' && /search|yes|looks good|go ahead/i.test(text)) { void searchFromChat(); return; }
+    let nextDraft = draft;
+    let nextStep: ChatStep = step;
+    if (step === 'route') {
+      const parsed = intentParser.parse(`${initialQuery} ${text}`);
+      if (!parsed.originCity || !parsed.destinationCity) { addAssistant('Please share both cities, for example “Mumbai to Delhi”.'); return; }
+      nextDraft = { ...draft, originCity: parsed.originCity, destinationCity: parsed.destinationCity };
+      nextStep = 'date';
+    } else if (step === 'date') {
+      nextDraft = { ...draft, preferredDate: parseChatDate(text) };
+      nextStep = 'passengers';
+    } else if (step === 'passengers') {
+      const passengerCount = parsePassengerCount(text);
+      if (!passengerCount) { addAssistant('How many people are travelling? Enter a number from 1 to 8.'); return; }
+      nextDraft = { ...draft, passengerCount };
+      nextStep = 'preference';
+    } else if (step === 'preference') {
+      nextDraft = applyPreference(draft, text);
+      nextStep = 'confirm';
+    } else {
+      addAssistant('You can update the trip details on the right, then search when everything looks right.');
+      return;
+    }
+    updateDraft(nextDraft);
+    setStep(nextStep);
+    window.setTimeout(() => addAssistant(chatQuestion(nextStep, nextDraft)), 180);
+  };
+
+  const searchFromChat = async () => {
+    if (!draft.originCity || !draft.destinationCity) { setStep('route'); addAssistant('Which cities are you travelling between?'); return; }
+    setPanel('searching');
+    addAssistant(`Searching ${draft.originCity} to ${draft.destinationCity}. I’ll keep the best options short.`);
+    try {
+      const response = await fetch('/api/trains', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft) });
+      if (!response.ok) throw new Error('Search unavailable');
+      const payload = await response.json() as { outcome: SearchOutcome; source: DataSource };
+      setChatOutcome(payload.outcome); setSource(payload.source); setPanel('results');
+      addAssistant(payload.outcome.options.length ? `I found ${payload.outcome.options.length} useful options. The strongest match is first.` : 'I couldn’t find a direct match. Try changing the date or one of the cities.');
+      track('results_viewed', { resultCount: payload.outcome.options.length, source: payload.source, mode: 'conversation' });
+    } catch {
+      const fallback = rankJourneys(draft);
+      setChatOutcome(fallback); setSource('sample'); setPanel('results');
+      addAssistant(`I found ${fallback.options.length} sample options. The strongest match is first.`);
+    }
+  };
+
+  const suggestions = panel === 'results'
+    ? suggestedQuestions.slice(0, 3).map((question) => ({ label: question, value: question }))
+    : chatSuggestions(step);
+  return <section className="conversation-workspace" aria-label="Conversational journey planner">
+    <div className="conversation-pane">
+      <div className="conversation-heading"><span className="conversation-avatar"><TrainFront size={18} /></span><div><strong>RailEase planner</strong><span>Ask, compare, decide</span></div></div>
+      <div className="conversation-thread" aria-live="polite">
+        {messages.map((message) => <div className={`chat-message ${message.role}`} key={message.id}><span>{message.role === 'assistant' ? <TrainFront size={15} /> : <UserRound size={15} />}</span><p>{message.text}</p></div>)}
+        <div ref={threadEnd} />
+      </div>
+      {panel !== 'searching' ? <div className="chat-compose">
+        {suggestions.length ? <div className="chat-suggestions">{suggestions.map((item) => <button type="button" key={item.value} onClick={() => handleReply(item.value)}>{item.label}</button>)}</div> : null}
+        <form onSubmit={(event) => { event.preventDefault(); handleReply(reply); }}><label className="sr-only" htmlFor="chat-reply">Reply to RailEase</label><input id="chat-reply" value={reply} onChange={(event) => setReply(event.target.value)} placeholder={step === 'confirm' ? 'Ask a question or change a detail' : 'Type your answer'} /><button type="submit" aria-label="Send reply"><Send size={18} /></button></form>
+      </div> : null}
+    </div>
+    <aside className="journey-panel" aria-label={panel === 'results' ? 'Train search results' : 'Journey details'}>
+      {panel === 'details' ? <ChatTripDetails intent={draft} pendingStep={step} onChange={updateDraft} onSearch={() => void searchFromChat()} /> : null}
+      {panel === 'searching' ? <div className="panel-searching" role="status"><span className="simple-loader"><TrainFront size={23} /></span><h2>Finding trains</h2><p>{draft.originCity} → {draft.destinationCity}</p></div> : null}
+      {panel === 'results' && chatOutcome ? <ConversationResults intent={draft} outcome={chatOutcome} source={source} onEdit={() => { setPanel('details'); setStep('confirm'); addAssistant('Update anything on the right, then search again.'); }} onChoose={onChoose} /> : null}
+    </aside>
+  </section>;
+}
+
+function ChatTripDetails({ intent, pendingStep, onChange, onSearch }: { intent: JourneyIntent; pendingStep: ChatStep; onChange: (intent: JourneyIntent) => void; onSearch: () => void }) {
+  const set = <K extends keyof JourneyIntent>(key: K, value: JourneyIntent[K]) => onChange({ ...intent, [key]: value });
+  return <div className="chat-trip-details"><p className="section-label">Your journey</p><div className="panel-title"><h2>Trip details</h2><span>{pendingStep === 'confirm' ? 'Ready to search' : 'Needs details'}</span></div>
+    <div className="chat-detail-grid"><label>From<input list="chat-major-cities" value={intent.originCity} onChange={(event) => set('originCity', event.target.value)} /></label><label>To<input list="chat-major-cities" value={intent.destinationCity} onChange={(event) => set('destinationCity', event.target.value)} /></label><label>Date<input type="date" value={pendingStep === 'date' || pendingStep === 'route' ? '' : intent.preferredDate} onChange={(event) => set('preferredDate', event.target.value)} /></label><label>Travellers<input type="number" min="1" max="8" value={pendingStep === 'passengers' || pendingStep === 'date' || pendingStep === 'route' ? '' : intent.passengerCount} onChange={(event) => set('passengerCount', Math.max(1, Math.min(8, Number(event.target.value))))} /></label></div>
+    <datalist id="chat-major-cities">{cityNames.map((city) => <option value={city} key={city} />)}</datalist>
+    <div className="chat-preferences"><label><input type="checkbox" checked={intent.confirmedOnly} onChange={(event) => set('confirmedOnly', event.target.checked)} /> Confirmed seats</label><label><input type="checkbox" checked={intent.seniorTraveller} onChange={(event) => set('seniorTraveller', event.target.checked)} /> Senior traveller</label></div>
+    <label className="chat-priority">Priority<select value={intent.rankingPriority} onChange={(event) => set('rankingPriority', event.target.value as JourneyIntent['rankingPriority'])}><option value="best">Best overall</option><option value="confirmation">Seat confirmation</option><option value="price">Lowest fare</option><option value="duration">Shortest time</option><option value="arrival">Arrival time</option></select></label>
+    <button className="primary-button panel-search-button" type="button" onClick={onSearch} disabled={pendingStep !== 'confirm' || !intent.originCity || !intent.destinationCity}>Search trains <ArrowRight size={17} /></button>
+  </div>;
+}
+
+function ConversationResults({ intent, outcome, source, onEdit, onChoose }: { intent: JourneyIntent; outcome: SearchOutcome; source: DataSource; onEdit: () => void; onChoose: (journey: JourneyOption) => void }) {
+  return <div className="conversation-results"><div className="conversation-results-head"><button className="back-link" type="button" onClick={onEdit}><ArrowLeft size={15} /> Details</button><div><p className="section-label">Best options</p><h2>{intent.originCity} → {intent.destinationCity}</h2><span>{formatTravelDate(intent.preferredDate)} · {intent.passengerCount} travellers</span></div></div>
+    {outcome.options.length ? <div className="journey-list">{outcome.options.map((journey, index) => <JourneyCard key={journey.id} journey={journey} index={index} onChoose={onChoose} />)}</div> : <div className="panel-empty"><Search size={25} /><h2>No direct match</h2><p>Change the date or cities and try again.</p></div>}
+    <p className="data-note">{source === 'railradar' ? 'Timetables use RailRadar data. Fares and seat status are illustrative.' : 'Sample timetables, fares and seat status.'}</p>
+  </div>;
+}
+
+function getInitialChatStep(query: string, intent: JourneyIntent): ChatStep {
+  if (!intent.originCity || !intent.destinationCity) return 'route';
+  if (!/(today|tomorrow|next\s+\w+|\d{4}-\d{2}-\d{2}|\d{1,2}\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec))/i.test(query)) return 'date';
+  if (!/(\d+|one|two|three|four|five|six|seven|eight)\s+(people|travellers?|passengers?)/i.test(query)) return 'passengers';
+  if (!/(confirmed|waitlist|cheap|budget|fare|fast|short|arrive|reach|senior|mother|father|comfort)/i.test(query)) return 'preference';
+  return 'confirm';
+}
+
+function chatQuestion(step: ChatStep, intent: JourneyIntent) {
+  if (step === 'route') return 'I can help with that. Which cities are you travelling between?';
+  if (step === 'date') return `Got it — ${intent.originCity} to ${intent.destinationCity}. What date would you like to travel?`;
+  if (step === 'passengers') return 'How many people are travelling?';
+  if (step === 'preference') return 'What matters most: confirmed seats, lowest fare, or shortest travel time?';
+  return 'I’ve put the trip together on the right. Does everything look right?';
+}
+
+function chatSuggestions(step: ChatStep) {
+  if (step === 'date') return [{ label: 'Fri, 28 Aug', value: '2026-08-28' }, { label: 'Sat, 29 Aug', value: '2026-08-29' }];
+  if (step === 'passengers') return [1, 2, 3, 4].map((count) => ({ label: `${count}`, value: `${count}` }));
+  if (step === 'preference') return [{ label: 'Confirmed seats', value: 'Confirmed seats' }, { label: 'Lowest fare', value: 'Lowest fare' }, { label: 'Shortest time', value: 'Shortest time' }, { label: 'No preference', value: 'No preference' }];
+  if (step === 'confirm') return [{ label: 'Search trains', value: 'Search trains' }, { label: 'Change details', value: 'Change details' }];
+  return [];
+}
+
+function parseChatDate(value: string) {
+  const iso = value.match(/\d{4}-\d{2}-\d{2}/)?.[0];
+  if (iso) return iso;
+  if (/tomorrow/i.test(value)) { const date = new Date(); date.setDate(date.getDate() + 1); return date.toISOString().slice(0, 10); }
+  return intentParser.parse(`Delhi to Mumbai ${value}`).preferredDate;
+}
+
+function parsePassengerCount(value: string) {
+  const words: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8 };
+  const match = value.toLowerCase().match(/\b([1-8]|one|two|three|four|five|six|seven|eight)\b/);
+  return match ? Number(match[1]) || words[match[1]] : 0;
+}
+
+function applyPreference(intent: JourneyIntent, value: string): JourneyIntent {
+  if (/confirm/i.test(value)) return { ...intent, confirmedOnly: true, rankingPriority: 'confirmation' };
+  if (/fare|cheap|budget/i.test(value)) return { ...intent, rankingPriority: 'price', comfortPreference: 'budget' };
+  if (/short|fast/i.test(value)) return { ...intent, rankingPriority: 'duration' };
+  return { ...intent, rankingPriority: 'best' };
 }
 
 function Searching({ intent }: { intent: JourneyIntent }) {

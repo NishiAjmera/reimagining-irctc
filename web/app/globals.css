@@ -117,6 +117,78 @@ textarea::placeholder { color: #84909a; }
   .data-note { text-align: left; }
 }
 
+/* Conversational planning workspace */
+.conversation-workspace { height: calc(100vh - 76px); min-height: 680px; display: grid; grid-template-columns: minmax(330px, 38%) minmax(0, 62%); background: #f5f3ed; border-top: 1px solid #deddd8; }
+.conversation-pane { min-width: 0; display: grid; grid-template-rows: auto 1fr auto; background: #fff; border-right: 1px solid #d8d9d5; }
+.conversation-heading { min-height: 72px; display: flex; align-items: center; gap: 11px; padding: 0 24px; border-bottom: 1px solid #e3e3df; }
+.conversation-avatar { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 8px; background: var(--ink); color: #fff; }
+.conversation-heading > div { display: grid; gap: 2px; }
+.conversation-heading strong { font-size: 14px; }
+.conversation-heading div span { color: var(--muted); font-size: 11px; }
+.conversation-thread { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; padding: 26px 24px 32px; scroll-behavior: smooth; }
+.chat-message { max-width: 88%; display: grid; grid-template-columns: 28px 1fr; gap: 9px; align-items: start; }
+.chat-message > span { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 7px; background: #e9eeec; color: var(--teal); }
+.chat-message p { margin: 0; padding: 11px 13px; border-radius: 4px 12px 12px 12px; background: #f0f2f0; color: #29424f; font-size: 13px; line-height: 1.55; }
+.chat-message.user { align-self: end; grid-template-columns: 1fr 28px; }
+.chat-message.user > span { grid-column: 2; grid-row: 1; background: #f3e6e2; color: var(--red-dark); }
+.chat-message.user p { grid-column: 1; grid-row: 1; border-radius: 12px 4px 12px 12px; background: var(--ink); color: #fff; }
+.chat-compose { padding: 14px 20px 20px; border-top: 1px solid #e3e3df; background: #fff; }
+.chat-suggestions { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
+.chat-suggestions button { min-height: 34px; padding: 0 11px; border: 1px solid #cbd0ce; border-radius: 7px; background: #fff; color: #405967; font-size: 11px; font-weight: 650; cursor: pointer; }
+.chat-suggestions button:hover { border-color: var(--teal); color: var(--teal); }
+.chat-compose form { display: grid; grid-template-columns: 1fr 42px; gap: 8px; padding: 5px; border: 1px solid #bac2c0; border-radius: 10px; background: #fff; }
+.chat-compose input { width: 100%; min-width: 0; height: 40px; padding: 0 8px; border: 0; outline: 0; background: transparent; font-size: 13px; }
+.chat-compose form button { width: 40px; height: 40px; display: grid; place-items: center; border: 0; border-radius: 7px; background: var(--red); color: #fff; cursor: pointer; }
+.journey-panel { min-width: 0; overflow-y: auto; padding: clamp(24px, 4vw, 46px); background: #f5f3ed; }
+.chat-trip-details { width: min(100%, 760px); margin: 0 auto; padding: clamp(24px, 4vw, 38px); border: 1px solid #d5d6d1; border-radius: 12px; background: #fff; }
+.panel-title { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+.panel-title h2 { font-size: 30px; }
+.panel-title span { padding: 6px 9px; border-radius: 6px; background: #e6f0ed; color: #16615a; font-size: 10px; font-weight: 700; }
+.chat-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.chat-detail-grid label, .chat-priority { display: grid; gap: 7px; color: #526573; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.chat-detail-grid input, .chat-priority select { width: 100%; min-height: 48px; padding: 0 12px; border: 1px solid #c7ccca; border-radius: 8px; background: #fff; color: var(--ink); text-transform: none; letter-spacing: 0; font-size: 14px; }
+.chat-preferences { display: flex; flex-wrap: wrap; gap: 11px; margin: 22px 0; }
+.chat-preferences label { min-height: 42px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid #d3d5d1; border-radius: 8px; color: #405967; font-size: 12px; }
+.chat-preferences input { accent-color: var(--teal); }
+.chat-priority { margin-top: 5px; }
+.panel-search-button { width: 100%; margin-top: 28px; }
+.panel-search-button:disabled { opacity: .45; cursor: not-allowed; }
+.panel-searching { min-height: 70vh; display: grid; align-content: center; justify-items: center; text-align: center; }
+.panel-searching h2 { margin-top: 5px; font-size: 30px; }
+.panel-searching p { color: var(--muted); }
+.conversation-results { width: min(100%, 820px); margin: 0 auto; }
+.conversation-results-head { display: grid; gap: 4px; margin-bottom: 24px; }
+.conversation-results-head .back-link { width: max-content; margin: 0 0 10px; }
+.conversation-results-head h2 { font-size: clamp(26px, 4vw, 38px); }
+.conversation-results-head > div > span { display: block; margin-top: 7px; color: var(--muted); font-size: 12px; }
+.conversation-results .journey-list { gap: 16px; }
+.conversation-results .journey-card-body { padding: 20px; }
+.conversation-results .route-timeline { margin-block: 20px; }
+.conversation-results .questions-section, .conversation-results .priority-panel { display: none; }
+.panel-empty { min-height: 420px; display: grid; align-content: center; justify-items: center; text-align: center; }
+.panel-empty svg { color: var(--red); }
+.panel-empty h2 { margin-top: 14px; }
+.panel-empty p { color: var(--muted); }
+
+@media (max-width: 920px) {
+  .conversation-workspace { height: auto; min-height: calc(100vh - 76px); grid-template-columns: 1fr; }
+  .conversation-pane { min-height: 620px; border-right: 0; border-bottom: 1px solid #d8d9d5; }
+  .conversation-thread { max-height: 480px; }
+  .journey-panel { overflow: visible; }
+}
+
+@media (max-width: 560px) {
+  .conversation-heading { padding-inline: 16px; }
+  .conversation-thread { padding: 20px 15px 26px; }
+  .chat-compose { padding: 12px 12px 16px; }
+  .chat-message { max-width: 94%; }
+  .journey-panel { padding: 22px 14px 40px; }
+  .chat-trip-details { padding: 22px 16px; }
+  .chat-detail-grid { grid-template-columns: 1fr; }
+  .panel-title { align-items: flex-start; flex-direction: column; }
+  .conversation-results .journey-card-body { padding: 17px 14px; }
+}
+
 /* Simplified public-service direction */
 .login-screen { min-height: 100vh; padding: 28px clamp(20px, 6vw, 80px); background: #f4f1ea; }
 .login-brand { width: min(100%, 1080px); margin: 0 auto; display: flex; align-items: center; gap: 11px; font-size: 19px; }

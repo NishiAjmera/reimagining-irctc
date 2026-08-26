@@ -34,6 +34,12 @@ Last updated: 26 August 2026
 - [x] Add date-aligned sample services for every supported city pair
 - [x] Add an optional server-side timetable provider with automatic fallback
 - [x] Add tests for major-city parsing and generated search results
+- [x] Expand natural-language entry into a persistent planning conversation
+- [x] Ask guided follow-up questions for missing trip details
+- [x] Add an editable journey panel beside the conversation
+- [x] Open ranked results in the right panel after confirmation
+- [x] Support follow-up journey questions after results load
+- [x] Preserve the manual search-details tab and flow
 
 ## Current focus
 
@@ -53,6 +59,8 @@ The refreshed product is live with public-link access at [railease-journey-plann
 - The refreshed interface completes the Bengaluru → Jaipur results flow with concise copy.
 - Unsupported city pairs still return practical alternatives; supported major-city pairs return three journeys.
 - Provider credentials stay server-side and failures fall back to local data.
+- Complete requests move directly to confirmation; incomplete requests collect only the missing essentials.
+- Conversation and results stack vertically on narrower screens without changing the manual search path.
 
 ## Decisions
 

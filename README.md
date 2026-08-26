@@ -16,7 +16,7 @@ RailEase optimises for **time to confident choice**. AI is embedded as an intent
 
 ## Working MVP
 
-- Natural-language journey planning with a reliable example journey
+- Expanding conversational journey planning with guided follow-up questions
 - Traditional origin, destination, date, and passenger search
 - Local intent extraction with editable constraints
 - Nearby-date, nearby-station, class, availability, timing, comfort, and fare consideration
@@ -28,6 +28,7 @@ RailEase optimises for **time to confident choice**. AI is embedded as an intent
 - Useful alternatives instead of a blank no-results state
 - Date-aligned sample results across 16 major Indian cities
 - Optional server-side RailRadar timetable integration with automatic local fallback
+- Split planning workspace with persistent chat and confirmed results on the right
 
 ## Architecture
 
@@ -55,6 +56,8 @@ The `JourneyExplainer`-style helpers answer common contextual questions locally.
 ## Train data
 
 RailEase currently covers Ahmedabad, Bengaluru, Bhopal, Bhubaneswar, Chandigarh, Chennai, Delhi, Hyderabad, Indore, Jaipur, Kochi, Kolkata, Lucknow, Mumbai, Patna, and Pune. Known corridors use seeded train names and numbers; other supported city pairs receive three realistic sample services aligned to the selected date.
+
+The conversational search expands after the first message, keeps the planning thread on the left, and builds an editable trip summary on the right. It asks only for missing essentials, waits for confirmation, then replaces the summary with ranked train results. The original **Search by details** tab remains available for users who prefer a manual form.
 
 An optional server-side adapter can fetch timetable names, numbers, departure times, arrivals, and durations from [RailRadar's trains-between-stations API](https://railradar.in/docs/trains-between-stations). Add `RAILRADAR_API_KEY` to the server environment to enable it. The key is never sent to the browser, and local results remain available if the provider is unavailable. Fares and seat status remain illustrative because that endpoint does not supply booking inventory.
 

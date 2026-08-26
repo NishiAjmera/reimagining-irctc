@@ -1,10 +1,10 @@
 # Project Progress
 
-Last updated: 25 August 2026
+Last updated: 26 August 2026
 
 ## Overall status
 
-**MVP complete and published**
+**Product refresh complete; public release in progress**
 
 ## Milestones
 
@@ -25,10 +25,15 @@ Last updated: 25 August 2026
 - [x] Complete desktop and 390px mobile demo-flow QA
 - [x] Pass lint, typecheck, tests, and production build
 - [x] Publish the validated MVP
+- [x] Add a production-style sign-in screen without exposed credentials
+- [x] Simplify product copy and remove repetitive UI content
+- [x] Replace decorative AI-style treatments with a restrained product UI
+- [x] Revalidate lint, types, tests, build, and the signed-in journey flow
+- [ ] Publish the refreshed site with public link access
 
 ## Current focus
 
-The complete MVP is live at [railease-journey-planner.nishiajmera21.chatgpt.site](https://railease-journey-planner.nishiajmera21.chatgpt.site). Future work can focus on authorised live railway data and production integrations.
+The refreshed product is being prepared for public-link access at [railease-journey-planner.nishiajmera21.chatgpt.site](https://railease-journey-planner.nishiajmera21.chatgpt.site). Access credentials are distributed separately and are never displayed in the UI or repository documentation.
 
 ## Verification
 
@@ -40,6 +45,8 @@ The complete MVP is live at [railease-journey-planner.nishiajmera21.chatgpt.site
 - Routes without direct matches return practical alternatives.
 - The 90-second hero journey was completed through prototype booking handoff.
 - Traditional Indore → Delhi search reaches the priority-selection step.
+- Product sign-in rejects invalid credentials and opens the planner with the private access pair.
+- The refreshed interface completes the Bengaluru → Jaipur results flow with concise copy.
 
 ## Decisions
 

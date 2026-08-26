@@ -1,4 +1,4 @@
-# RailEase — AI-assisted railway journey planning
+# RailEase — railway journey planning
 
 RailEase is a polished hackathon MVP for **Build What Moves India 2026**. It helps travellers move from a broad train search to a small set of viable, understandable journey choices.
 
@@ -16,14 +16,14 @@ RailEase optimises for **time to confident choice**. AI is embedded as an intent
 
 ## Working MVP
 
-- Natural-language journey planning with a reliable demo shortcut
+- Natural-language journey planning with a reliable example journey
 - Traditional origin, destination, date, and passenger search
 - Local intent extraction with editable constraints
 - Nearby-date, nearby-station, class, availability, timing, comfort, and fare consideration
 - Three ranked recommendation cards with reasons and explicit trade-offs
 - Plain-language explanations for railway classes, RAC, and waitlist
 - Contextual questions tied to the selected journey
-- Responsive booking summary and safe prototype handoff
+- Responsive booking summary and safe reservation handoff
 - Client-side product analytics for time to results and time to selection
 - Useful alternatives instead of a blank no-results state
 
@@ -81,9 +81,9 @@ npm test
 npm run build
 ```
 
-## Demo scenario
+## Example scenario
 
-Use **Try demo journey** or paste:
+Use **Use example** or paste:
 
 > I need to travel from Bengaluru to Jaipur next Friday for a wedding. I need to reach by 4 PM. We’re three people including my mother, and I don’t want a waitlisted ticket.
 

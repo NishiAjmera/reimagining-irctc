@@ -76,6 +76,96 @@ textarea::placeholder { color: #84909a; }
   .trust-row { flex-direction: column; margin-top: 42px; }
 }
 
+/* Product UI refinement */
+.primary-button { border-radius: 8px; box-shadow: none; }
+.primary-button:active { transform: none; box-shadow: none; }
+.planner-card, .journey-card, .booking-ticket { border-radius: 12px; box-shadow: none; }
+.planner-tabs button, textarea, .journey-metrics > div, .reason-strip, .tradeoff-strip { border-radius: 8px; }
+.hero-shell::before { display: none; }
+.hero-copy { text-align: left; }
+.hero-copy .eyebrow { justify-content: flex-start; color: var(--red-dark); }
+.hero-copy h1 { font-family: var(--font-sans), Arial, sans-serif; font-size: clamp(42px, 6vw, 62px); line-height: 1.04; }
+.constraints-screen h1 { font-family: var(--font-sans), Arial, sans-serif; font-size: clamp(38px, 5vw, 52px); }
+.constraint-footer { justify-content: flex-end; }
+.simple-loader { width: 52px; height: 52px; display: grid; place-items: center; margin-bottom: 18px; border-radius: 10px; background: var(--ink); color: white; }
+.searching-screen h1 { font-family: var(--font-sans), Arial, sans-serif; font-size: clamp(36px, 6vw, 52px); }
+.journey-card.featured { border-color: #bd6259; box-shadow: none; }
+.card-ribbon { min-height: 36px; padding-inline: 20px; }
+.journey-card-body { padding: 22px; }
+.reason-strip { background: #edf2f0; }
+.reason-strip p { display: block; }
+.why-panel { border-left-width: 2px; border-radius: 0 8px 8px 0; background: #f4f3ef; }
+.priority-card { border-radius: 10px; }
+.questions-section { margin-top: 38px; padding-top: 28px; }
+.questions-section h2 { font-size: 24px; }
+.question-list { margin-top: 15px; }
+.question-list button { border-radius: 8px; }
+.data-note { margin: 14px 0 0; color: #78858b; font-size: 10px; text-align: right; }
+.booking-why { border-radius: 10px; }
+.handoff-icon { box-shadow: none; }
+
+@media (max-width: 900px) {
+  .priority-panel { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .hero-shell { padding-top: 38px; }
+  .hero-copy { margin-bottom: 22px; }
+  .hero-copy h1 { font-size: 40px; }
+  .constraint-footer > span { display: none; }
+  .journey-card-body { padding: 18px 15px; }
+  .data-note { text-align: left; }
+}
+
+/* Simplified public-service direction */
+.login-screen { min-height: 100vh; padding: 28px clamp(20px, 6vw, 80px); background: #f4f1ea; }
+.login-brand { width: min(100%, 1080px); margin: 0 auto; display: flex; align-items: center; gap: 11px; font-size: 19px; }
+.login-layout { width: min(100%, 1040px); min-height: calc(100vh - 95px); margin: 0 auto; display: grid; grid-template-columns: 1.15fr .85fr; align-items: center; gap: clamp(50px, 9vw, 110px); }
+.login-copy p { margin: 0 0 14px; color: var(--red-dark); font-size: 12px; font-weight: 750; text-transform: uppercase; letter-spacing: .11em; }
+.login-copy h1 { max-width: 620px; margin: 0 0 22px; font-size: clamp(42px, 5.5vw, 66px); line-height: 1.03; }
+.login-copy span { display: block; max-width: 520px; color: var(--muted); font-size: 18px; line-height: 1.55; }
+.login-card { padding: 30px; border: 1px solid #cfd2cf; border-radius: 12px; background: #fff; }
+.login-icon { width: 42px; height: 42px; display: grid; place-items: center; margin-bottom: 19px; border-radius: 8px; background: var(--ink); color: white; }
+.login-card h2 { font-size: 25px; }
+.login-card > p:not(.form-error) { margin: 7px 0 23px; color: var(--muted); font-size: 14px; }
+.login-card label { display: grid; gap: 7px; margin-top: 14px; color: #435868; font-size: 12px; font-weight: 700; }
+.login-card input { width: 100%; min-height: 46px; padding: 0 12px; border: 1px solid #bfc5c3; border-radius: 8px; background: #fff; }
+.login-submit { width: 100%; margin-top: 20px; box-shadow: none; }
+.demo-credentials { display: grid; grid-template-columns: 1fr auto; gap: 7px 12px; margin-top: 20px; padding: 14px; border: 1px solid #d7d5ce; border-radius: 8px; background: #f6f4ef; }
+.demo-credentials span { grid-column: 1 / -1; color: #60717c; font-size: 10px; font-weight: 750; text-transform: uppercase; letter-spacing: .08em; }
+.demo-credentials code { color: #2c4656; font-family: var(--font-sans); font-size: 12px; }
+.demo-credentials button { grid-row: 2 / 4; grid-column: 2; align-self: center; min-height: 36px; padding: 0 10px; border: 1px solid #bfc5c3; border-radius: 7px; background: white; color: var(--ink); cursor: pointer; font-size: 11px; font-weight: 700; }
+.login-card > small { display: block; margin-top: 15px; color: #7b868c; font-size: 10px; line-height: 1.5; }
+.demo-user { min-height: 36px; display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; border-radius: 7px; background: #eceae4; color: #516470; font-size: 12px; }
+
+.hero-shell { max-width: 980px; padding-top: 62px; }
+.hero-shell::before { display: none; }
+.hero-copy { margin-bottom: 30px; text-align: left; }
+.hero-copy .eyebrow { justify-content: flex-start; color: var(--red-dark); }
+.hero-copy h1 { margin: 12px 0 13px; font-size: clamp(42px, 6vw, 62px); line-height: 1.04; letter-spacing: -.045em; }
+.hero-copy .lede { max-width: 620px; font-size: 18px; }
+.planner-card { border-radius: 12px; box-shadow: none; }
+.planner-tabs { padding: 5px; }
+.planner-tabs button { min-height: 44px; border-radius: 8px; }
+.planner-body { padding: 26px; }
+.planner-heading { align-items: center; }
+textarea { min-height: 112px; border-radius: 9px; font-size: 15px; }
+.primary-button { border-radius: 8px; box-shadow: none; }
+.primary-button:active { transform: none; box-shadow: none; }
+.demo-button, .sample-row button { border-radius: 8px; }
+.sample-row { justify-content: flex-start; margin-top: 12px; }
+.trust-row { display: none; }
+
+@media (max-width: 720px) {
+  .login-screen { padding: 20px 16px; }
+  .login-layout { min-height: auto; grid-template-columns: 1fr; gap: 30px; padding: 48px 0; }
+  .login-copy h1 { font-size: 42px; }
+  .login-copy span { font-size: 16px; }
+  .login-card { padding: 22px 18px; }
+  .hero-shell { padding-top: 42px; }
+  .hero-copy h1 { font-size: 43px; }
+}
+
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 
 /* Shared application screens */
@@ -207,4 +297,45 @@ input { font: inherit; color: var(--ink); }
   .journey-card-body { padding: 19px 15px; }.train-title-row h3 { font-size: 20px; }.match-score { width: 54px; height: 54px; }.route-timeline { grid-template-columns: 1fr 90px 1fr; gap: 9px; }.time-block strong { font-size: 20px; }.time-block small { max-width: 110px; }.arrival small { justify-self: end; }.journey-metrics { grid-template-columns: 1fr 1fr; }.journey-metrics > div:last-child { grid-column: 1 / -1; }.card-actions { flex-direction: column-reverse; }.why-button, .choose-button { width: 100%; justify-content: center; margin: 0; }.choose-button { position: sticky; bottom: 8px; z-index: 2; box-shadow: 0 5px 15px rgba(16,42,67,.16); }.term-popover { left: -10px; width: min(260px, 72vw); }
   .questions-section { margin-top: 45px; }.question-list { display: grid; }.question-list button { justify-content: space-between; text-align: left; }.inline-answer { grid-template-columns: auto 1fr; }.inline-answer > button { grid-column: 2; justify-self: end; }
   .ticket-route { grid-template-columns: 1fr 55px 1fr; }.ticket-route i:nth-of-type(2), .ticket-route svg { display: none; }.ticket-meta { grid-template-columns: repeat(2, 1fr); }.booking-why { grid-template-columns: 1fr; }.booking-why h2 { grid-column: auto; }.booking-actions { align-items: stretch; flex-direction: column; }.booking-actions .primary-button { width: 100%; }.handoff-summary { grid-template-columns: auto 1fr; }.handoff-summary b { grid-column: 2; }.handoff-actions { width: 100%; flex-direction: column; }.handoff-actions button { width: 100%; }
+}
+
+/* Final product finish */
+.primary-button { border-radius: 8px; box-shadow: none; }
+.primary-button:active { transform: none; box-shadow: none; }
+.planner-card, .journey-card, .booking-ticket { border-radius: 12px; box-shadow: none; }
+.planner-tabs button, textarea, .journey-metrics > div, .reason-strip, .tradeoff-strip { border-radius: 8px; }
+.hero-shell::before { display: none; }
+.hero-copy { text-align: left; }
+.hero-copy .eyebrow { justify-content: flex-start; color: var(--red-dark); }
+.hero-copy h1 { font-family: var(--font-sans), Arial, sans-serif; font-size: clamp(42px, 6vw, 62px); line-height: 1.04; }
+.constraints-screen h1 { font-family: var(--font-sans), Arial, sans-serif; font-size: clamp(38px, 5vw, 52px); }
+.constraint-footer { justify-content: flex-end; }
+.simple-loader { width: 52px; height: 52px; display: grid; place-items: center; margin-bottom: 18px; border-radius: 10px; background: var(--ink); color: white; }
+.searching-screen h1 { font-family: var(--font-sans), Arial, sans-serif; font-size: clamp(36px, 6vw, 52px); }
+.journey-card.featured { border-color: #bd6259; box-shadow: none; }
+.card-ribbon { min-height: 36px; padding-inline: 20px; }
+.journey-card-body { padding: 22px; }
+.reason-strip { background: #edf2f0; }
+.reason-strip p { display: block; }
+.why-panel { border-left-width: 2px; border-radius: 0 8px 8px 0; background: #f4f3ef; }
+.priority-card { border-radius: 10px; }
+.questions-section { margin-top: 38px; padding-top: 28px; }
+.questions-section h2 { font-size: 24px; }
+.question-list { margin-top: 15px; }
+.question-list button { border-radius: 8px; }
+.data-note { margin: 14px 0 0; color: #78858b; font-size: 10px; text-align: right; }
+.booking-why { border-radius: 10px; }
+.handoff-icon { box-shadow: none; }
+
+@media (max-width: 900px) {
+  .priority-panel { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .hero-shell { padding-top: 38px; }
+  .hero-copy { margin-bottom: 22px; }
+  .hero-copy h1 { font-size: 40px; }
+  .constraint-footer > span { display: none; }
+  .journey-card-body { padding: 18px 15px; }
+  .data-note { text-align: left; }
 }

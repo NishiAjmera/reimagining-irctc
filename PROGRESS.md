@@ -40,6 +40,7 @@ Last updated: 26 August 2026
 - [x] Open ranked results in the right panel after confirmation
 - [x] Support follow-up journey questions after results load
 - [x] Preserve the manual search-details tab and flow
+- [x] Animate the compact prompt expanding into the split chat workspace
 
 ## Current focus
 

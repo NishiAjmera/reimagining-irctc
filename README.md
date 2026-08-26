@@ -57,7 +57,7 @@ The `JourneyExplainer`-style helpers answer common contextual questions locally.
 
 RailEase currently covers Ahmedabad, Bengaluru, Bhopal, Bhubaneswar, Chandigarh, Chennai, Delhi, Hyderabad, Indore, Jaipur, Kochi, Kolkata, Lucknow, Mumbai, Patna, and Pune. Known corridors use seeded train names and numbers; other supported city pairs receive three realistic sample services aligned to the selected date.
 
-The conversational search expands after the first message, keeps the planning thread on the left, and builds an editable trip summary on the right. It asks only for missing essentials, waits for confirmation, then replaces the summary with ranked train results. The original **Search by details** tab remains available for users who prefer a manual form.
+The conversational search smoothly expands after the first message, keeps the planning thread on the left, and builds an editable trip summary on the right. It asks only for missing essentials, waits for confirmation, then replaces the summary with ranked train results. The transition respects reduced-motion preferences. The original **Search by details** tab remains available for users who prefer a manual form.
 
 An optional server-side adapter can fetch timetable names, numbers, departure times, arrivals, and durations from [RailRadar's trains-between-stations API](https://railradar.in/docs/trains-between-stations). Add `RAILRADAR_API_KEY` to the server environment to enable it. The key is never sent to the browser, and local results remain available if the provider is unavailable. Fares and seat status remain illustrative because that endpoint does not supply booking inventory.
 

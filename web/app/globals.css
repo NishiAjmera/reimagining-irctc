@@ -189,6 +189,34 @@ textarea::placeholder { color: #84909a; }
   .conversation-results .journey-card-body { padding: 17px 14px; }
 }
 
+/* Compact prompt → planning workspace transition */
+.conversation-workspace {
+  transform-origin: 50% 12%;
+  animation: chat-workspace-expand 560ms cubic-bezier(.22, 1, .36, 1) both;
+}
+.conversation-pane { animation: chat-pane-settle 480ms cubic-bezier(.22, 1, .36, 1) 70ms both; }
+.journey-panel { animation: journey-panel-reveal 480ms cubic-bezier(.22, 1, .36, 1) 120ms both; }
+
+@keyframes chat-workspace-expand {
+  0% { opacity: .25; transform: translateY(18px) scale(.94); clip-path: inset(8% 15% 10% 15% round 18px); }
+  65% { opacity: 1; }
+  100% { opacity: 1; transform: translateY(0) scale(1); clip-path: inset(0 round 0); }
+}
+
+@keyframes chat-pane-settle {
+  from { opacity: 0; transform: translateX(-18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes journey-panel-reveal {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conversation-workspace, .conversation-pane, .journey-panel { animation: none; }
+}
+
 /* Simplified public-service direction */
 .login-screen { min-height: 100vh; padding: 28px clamp(20px, 6vw, 80px); background: #f4f1ea; }
 .login-brand { width: min(100%, 1080px); margin: 0 auto; display: flex; align-items: center; gap: 11px; font-size: 19px; }

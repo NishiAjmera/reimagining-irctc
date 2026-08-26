@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, ArrowRight, CalendarDays, Check, Languages, LockKeyhole, MapPin, Menu, Search, Send, ShieldCheck, TrainFront, UserRound, Users, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CalendarDays, Check, GripVertical, Languages, LockKeyhole, MapPin, Menu, PanelLeftClose, PanelLeftOpen, Search, Send, ShieldCheck, TrainFront, UserRound, Users, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { track } from '@/lib/analytics';
 import { cityNames } from '@/lib/data/stations';
@@ -161,10 +161,28 @@ function ConversationWorkspace({ initialQuery, onIntentChange, onChoose }: { ini
   const [panel, setPanel] = useState<ChatPanel>('details');
   const [chatOutcome, setChatOutcome] = useState<SearchOutcome | null>(null);
   const [source, setSource] = useState<DataSource>('sample');
+  const [chatOpen, setChatOpen] = useState(true);
+  const [chatWidth, setChatWidth] = useState(420);
+  const [resizing, setResizing] = useState(false);
   const threadEnd = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => { onIntentChange(draft); }, [draft, onIntentChange]);
   useEffect(() => { threadEnd.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, [messages]);
+  useEffect(() => {
+    if (!resizing) return;
+    const resize = (event: PointerEvent) => setChatWidth(Math.round(Math.max(320, Math.min(event.clientX, Math.min(680, window.innerWidth * .58)))));
+    const stop = () => setResizing(false);
+    window.addEventListener('pointermove', resize);
+    window.addEventListener('pointerup', stop, { once: true });
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    return () => {
+      window.removeEventListener('pointermove', resize);
+      window.removeEventListener('pointerup', stop);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [resizing]);
 
   const addAssistant = (text: string) => setMessages((current) => [...current, { id: Date.now() + 1, role: 'assistant', text }]);
   const updateDraft = (next: JourneyIntent) => { setDraft(next); setPanel('details'); setChatOutcome(null); };
@@ -229,8 +247,10 @@ function ConversationWorkspace({ initialQuery, onIntentChange, onChoose }: { ini
   const suggestions = panel === 'results'
     ? suggestedQuestions.slice(0, 3).map((question) => ({ label: question, value: question }))
     : chatSuggestions(step);
-  return <section className="conversation-workspace" aria-label="Conversational journey planner">
-    <div className="conversation-pane">
+  return <section className={`conversation-workspace ${chatOpen ? '' : 'chat-closed'} ${resizing ? 'is-resizing' : ''}`} style={{ '--chat-width': `${chatWidth}px` } as React.CSSProperties} aria-label="Conversational journey planner">
+    <button className="chat-toggle" type="button" onClick={() => setChatOpen((open) => !open)} aria-expanded={chatOpen} aria-label={chatOpen ? 'Close chat' : 'Open chat'}>{chatOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}</button>
+    {chatOpen ? <div className="chat-resizer" role="separator" aria-label="Resize chat" aria-orientation="vertical" aria-valuemin={320} aria-valuemax={680} aria-valuenow={chatWidth} tabIndex={0} onPointerDown={(event) => { event.preventDefault(); setResizing(true); }} onKeyDown={(event) => { if (event.key === 'ArrowLeft') setChatWidth((width) => Math.max(320, width - 24)); if (event.key === 'ArrowRight') setChatWidth((width) => Math.min(680, width + 24)); }}><GripVertical size={15} /></div> : null}
+    <div className="conversation-pane" aria-hidden={!chatOpen}>
       <div className="conversation-heading"><span className="conversation-avatar"><TrainFront size={18} /></span><div><strong>RailEase planner</strong><span>Ask, compare, decide</span></div></div>
       <div className="conversation-thread" aria-live="polite">
         {messages.map((message) => <div className={`chat-message ${message.role}`} key={message.id}><span>{message.role === 'assistant' ? <TrainFront size={15} /> : <UserRound size={15} />}</span><p>{message.text}</p></div>)}

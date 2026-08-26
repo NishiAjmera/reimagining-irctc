@@ -41,6 +41,8 @@ Last updated: 26 August 2026
 - [x] Support follow-up journey questions after results load
 - [x] Preserve the manual search-details tab and flow
 - [x] Animate the compact prompt expanding into the split chat workspace
+- [x] Add a collapsible chat panel with a clear open and close control
+- [x] Add mouse, touch, and keyboard-accessible chat-width resizing
 
 ## Current focus
 
@@ -62,6 +64,7 @@ The refreshed product is live with public-link access at [railease-journey-plann
 - Provider credentials stay server-side and failures fall back to local data.
 - Complete requests move directly to confirmation; incomplete requests collect only the missing essentials.
 - Conversation and results stack vertically on narrower screens without changing the manual search path.
+- The chat panel can be resized on desktop, collapsed to prioritise results, and reopened without losing the conversation.
 
 ## Decisions
 

@@ -30,6 +30,10 @@ Last updated: 26 August 2026
 - [x] Replace decorative AI-style treatments with a restrained product UI
 - [x] Revalidate lint, types, tests, build, and the signed-in journey flow
 - [x] Publish the refreshed site with public link access
+- [x] Expand search coverage to 16 major Indian cities
+- [x] Add date-aligned sample services for every supported city pair
+- [x] Add an optional server-side timetable provider with automatic fallback
+- [x] Add tests for major-city parsing and generated search results
 
 ## Current focus
 
@@ -47,6 +51,8 @@ The refreshed product is live with public-link access at [railease-journey-plann
 - Traditional Indore → Delhi search reaches the priority-selection step.
 - Product sign-in rejects invalid credentials and opens the planner with the private access pair.
 - The refreshed interface completes the Bengaluru → Jaipur results flow with concise copy.
+- Unsupported city pairs still return practical alternatives; supported major-city pairs return three journeys.
+- Provider credentials stay server-side and failures fall back to local data.
 
 ## Decisions
 
@@ -55,6 +61,7 @@ The refreshed product is live with public-link access at [railease-journey-plann
 - Keep ranking deterministic, readable, and independently tested.
 - Show three viable options rather than a dense train table.
 - Use simulated data; do not integrate with live IRCTC services.
+- Use RailRadar only as an optional timetable source; keep fare and seat-status claims explicitly illustrative.
 - Never present confirmation confidence as a guarantee.
 
 ## Update convention

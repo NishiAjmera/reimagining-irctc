@@ -26,6 +26,8 @@ RailEase optimises for **time to confident choice**. AI is embedded as an intent
 - Responsive booking summary and safe reservation handoff
 - Client-side product analytics for time to results and time to selection
 - Useful alternatives instead of a blank no-results state
+- Date-aligned sample results across 16 major Indian cities
+- Optional server-side RailRadar timetable integration with automatic local fallback
 
 ## Architecture
 
@@ -49,6 +51,14 @@ web/
 `IntentParser` separates the product contract from its implementation. The current `LocalIntentParser` understands the complete demo flow without an API key. A future hosted model adapter can implement the same interface for broader free-form language while preserving the local fallback.
 
 The `JourneyExplainer`-style helpers answer common contextual questions locally. They can later be enhanced by a model, but the demo never depends on one.
+
+## Train data
+
+RailEase currently covers Ahmedabad, Bengaluru, Bhopal, Bhubaneswar, Chandigarh, Chennai, Delhi, Hyderabad, Indore, Jaipur, Kochi, Kolkata, Lucknow, Mumbai, Patna, and Pune. Known corridors use seeded train names and numbers; other supported city pairs receive three realistic sample services aligned to the selected date.
+
+An optional server-side adapter can fetch timetable names, numbers, departure times, arrivals, and durations from [RailRadar's trains-between-stations API](https://railradar.in/docs/trains-between-stations). Add `RAILRADAR_API_KEY` to the server environment to enable it. The key is never sent to the browser, and local results remain available if the provider is unavailable. Fares and seat status remain illustrative because that endpoint does not supply booking inventory.
+
+The [official Open Government Data timetable catalog](https://www.data.gov.in/catalog/indian-railways-train-time-table) is useful as a historical reference, but its published timetable is old and the resource currently has no API. Indian Railways' [passenger enquiry](https://www.indianrail.gov.in/enquiry/SCHEDULE/TrainSchedule.jsp) remains the authoritative consumer-facing schedule reference.
 
 ## Why ranking is deterministic
 
@@ -91,7 +101,7 @@ The app extracts the constraints, recommends a confirmed 3A overnight journey, e
 
 ## What is mocked
 
-Train schedules, fares, availability, confirmation confidence, station distance, and booking handoff are local prototype data. RailEase does not connect to IRCTC, collect passenger details, process payments, or guarantee future availability.
+Without a configured provider key, train schedules, fares, availability, confirmation confidence, station distance, and booking handoff are local sample data. With RailRadar enabled, timetable details come from that provider while fares and availability remain illustrative. RailEase does not connect to IRCTC, collect passenger details, process payments, or guarantee future availability.
 
 ## Future integrations
 

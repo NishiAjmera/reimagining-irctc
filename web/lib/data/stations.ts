@@ -10,10 +10,25 @@ export const stations: Record<string, Station> = {
   NDLS: { code: 'NDLS', name: 'New Delhi', city: 'Delhi', distanceFromCityCentreKm: 1 },
   NZM: { code: 'NZM', name: 'Hazrat Nizamuddin', city: 'Delhi', distanceFromCityCentreKm: 7 },
   MMCT: { code: 'MMCT', name: 'Mumbai Central', city: 'Mumbai', distanceFromCityCentreKm: 3 },
+  CSMT: { code: 'CSMT', name: 'Chhatrapati Shivaji Maharaj Terminus', city: 'Mumbai', distanceFromCityCentreKm: 1 },
   PUNE: { code: 'PUNE', name: 'Pune Junction', city: 'Pune', distanceFromCityCentreKm: 2 },
   ADI: { code: 'ADI', name: 'Ahmedabad Junction', city: 'Ahmedabad', distanceFromCityCentreKm: 4 },
   MAS: { code: 'MAS', name: 'MGR Chennai Central', city: 'Chennai', distanceFromCityCentreKm: 3 },
   HYB: { code: 'HYB', name: 'Hyderabad Deccan', city: 'Hyderabad', distanceFromCityCentreKm: 2 },
+  HWH: { code: 'HWH', name: 'Howrah Junction', city: 'Kolkata', distanceFromCityCentreKm: 5 },
+  LKO: { code: 'LKO', name: 'Lucknow Junction', city: 'Lucknow', distanceFromCityCentreKm: 3 },
+  RKMP: { code: 'RKMP', name: 'Rani Kamlapati', city: 'Bhopal', distanceFromCityCentreKm: 7 },
+  PNBE: { code: 'PNBE', name: 'Patna Junction', city: 'Patna', distanceFromCityCentreKm: 2 },
+  ERS: { code: 'ERS', name: 'Ernakulam Junction', city: 'Kochi', distanceFromCityCentreKm: 6 },
+  BBS: { code: 'BBS', name: 'Bhubaneswar', city: 'Bhubaneswar', distanceFromCityCentreKm: 4 },
+  CDG: { code: 'CDG', name: 'Chandigarh Junction', city: 'Chandigarh', distanceFromCityCentreKm: 8 },
 };
 
-export const cityNames = ['Bengaluru', 'Jaipur', 'Indore', 'Delhi', 'Mumbai', 'Pune', 'Ahmedabad', 'Chennai', 'Hyderabad'];
+export const cityNames = [
+  'Ahmedabad', 'Bengaluru', 'Bhopal', 'Bhubaneswar', 'Chandigarh', 'Chennai', 'Delhi', 'Hyderabad',
+  'Indore', 'Jaipur', 'Kochi', 'Kolkata', 'Lucknow', 'Mumbai', 'Patna', 'Pune',
+];
+
+export const primaryStationByCity = Object.fromEntries(
+  cityNames.map((city) => [city, Object.values(stations).find((station) => station.city === city)]),
+) as Record<string, Station | undefined>;

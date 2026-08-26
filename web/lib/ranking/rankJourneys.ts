@@ -1,14 +1,21 @@
-import { trains } from '@/lib/data/trains';
-import type { JourneyIntent, JourneyOption, SearchOutcome } from '@/types/journey';
+import { createSampleServices, trains } from '@/lib/data/trains';
+import type { JourneyIntent, JourneyOption, SearchOutcome, TrainService } from '@/types/journey';
 import { scoreJourney, withRecommendation } from './scoreJourney';
 
 const byScore = (a: JourneyOption, b: JourneyOption) => b.score - a.score;
 
 export function rankJourneys(intent: JourneyIntent): SearchOutcome {
-  const matching = trains.filter((train) =>
+  const stored = trains.filter((train) =>
     train.departureStation.city.toLowerCase() === intent.originCity.toLowerCase() &&
     train.arrivalStation.city.toLowerCase() === intent.destinationCity.toLowerCase(),
   );
+  const generated = createSampleServices(intent.originCity, intent.destinationCity);
+  const services = stored.length >= 2 ? stored : [...stored, ...generated];
+  return rankJourneyServices(intent, services);
+}
+
+export function rankJourneyServices(intent: JourneyIntent, services: TrainService[]): SearchOutcome {
+  const matching = services.map((train) => alignToSearchDate(train, intent.preferredDate));
 
   if (matching.length === 0) {
     return {
@@ -19,13 +26,13 @@ export function rankJourneys(intent: JourneyIntent): SearchOutcome {
   }
 
   const candidates = matching.flatMap((train) => train.classes.map((_, index) => scoreJourney(train, index, intent))).sort(byScore);
-  const exactDate = candidates.filter((option) => option.departureDateTime.slice(0, 10) === intent.preferredDate);
+  const exactDate = candidates.filter((option) => localDate(option.departureDateTime) === intent.preferredDate);
   const confirmed = exactDate.filter((option) => option.classOption.status === 'CONFIRMED');
   const best = (intent.confirmedOnly ? confirmed[0] : candidates[0]) ?? candidates[0];
   const cheapest = confirmed
     .filter((option) => option.id !== best.id && option.scoreBreakdown.arrival > 0)
     .sort((a, b) => a.classOption.fare - b.classOption.fare)[0];
-  const alternative = candidates.filter((option) => option.departureDateTime.slice(0, 10) !== intent.preferredDate && option.classOption.status === 'CONFIRMED').sort(byScore)[0];
+  const alternative = candidates.filter((option) => localDate(option.departureDateTime) !== intent.preferredDate && option.classOption.status === 'CONFIRMED').sort(byScore)[0];
 
   const selected: JourneyOption[] = [];
   if (best) selected.push(withRecommendation(best, 'BEST_OVERALL'));
@@ -49,6 +56,29 @@ export function rankJourneys(intent: JourneyIntent): SearchOutcome {
       classes: new Set(matching.flatMap((train) => train.classes.map((item) => item.code))).size,
     },
   };
+}
+
+function alignToSearchDate(train: TrainService, preferredDate: string): TrainService {
+  const departureDate = shiftDate(preferredDate, train.searchDateOffset ?? 0);
+  const departureTime = train.departureDateTime.slice(11, 19);
+  const departure = new Date(`${departureDate}T${departureTime}+05:30`);
+  return {
+    ...train,
+    departureDateTime: departure.toISOString(),
+    arrivalDateTime: new Date(departure.getTime() + train.durationMinutes * 60_000).toISOString(),
+  };
+}
+
+function shiftDate(date: string, offset: number) {
+  const value = new Date(`${date}T00:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + offset);
+  return value.toISOString().slice(0, 10);
+}
+
+function localDate(iso: string) {
+  const parts = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Kolkata' }).formatToParts(new Date(iso));
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
 }
 
 export function recommendAlternatives(intent: JourneyIntent) {

@@ -10,4 +10,9 @@ describe('LocalIntentParser', () => {
       seniorTraveller: true, confirmedOnly: true, comfortPreference: 'comfortable',
     });
   });
+
+  it('recognises additional major cities', () => {
+    const intent = new LocalIntentParser().parse('Kolkata to Kochi for 2 passengers');
+    expect(intent).toMatchObject({ originCity: 'Kolkata', destinationCity: 'Kochi', passengerCount: 2 });
+  });
 });

@@ -44,6 +44,7 @@ export type TrainService = {
   durationMinutes: number;
   classes: ClassAvailability[];
   trainTags: Array<'fastest' | 'overnight' | 'premium' | 'budget' | 'seniorFriendly'>;
+  searchDateOffset?: number;
 };
 
 export type ScoreBreakdown = {

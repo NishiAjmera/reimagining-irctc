@@ -33,8 +33,15 @@ describe('journey ranking', () => {
   });
 
   it('returns useful alternatives instead of a blank result', () => {
-    const outcome = recommendAlternatives({ ...intent, originCity: 'Pune', destinationCity: 'Chennai' });
+    const outcome = recommendAlternatives({ ...intent, originCity: 'Goa', destinationCity: 'Srinagar' });
     expect(outcome).toHaveLength(3);
     expect(outcome[0]).toContain('nearby');
+  });
+
+  it('returns sample journeys between supported major cities', () => {
+    const outcome = rankJourneys({ ...intent, originCity: 'Kolkata', destinationCity: 'Pune', preferredDate: '2026-09-12' });
+    expect(outcome.options).toHaveLength(3);
+    expect(outcome.options[0].departureStation.city).toBe('Kolkata');
+    expect(outcome.options[0].arrivalStation.city).toBe('Pune');
   });
 });

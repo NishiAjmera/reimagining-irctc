@@ -6,6 +6,9 @@ const CITY_ALIASES: Array<[RegExp, string]> = [
   [/bengaluru|bangalore/i, 'Bengaluru'], [/jaipur/i, 'Jaipur'], [/indore/i, 'Indore'],
   [/delhi/i, 'Delhi'], [/mumbai|bombay/i, 'Mumbai'], [/pune/i, 'Pune'],
   [/ahmedabad/i, 'Ahmedabad'], [/chennai|madras/i, 'Chennai'], [/hyderabad/i, 'Hyderabad'],
+  [/kolkata|calcutta/i, 'Kolkata'], [/lucknow/i, 'Lucknow'], [/bhopal/i, 'Bhopal'],
+  [/patna/i, 'Patna'], [/kochi|cochin|ernakulam/i, 'Kochi'], [/bhubaneswar/i, 'Bhubaneswar'],
+  [/chandigarh/i, 'Chandigarh'],
 ];
 
 const findCities = (input: string) => CITY_ALIASES.filter(([pattern]) => pattern.test(input)).map(([, city]) => city);

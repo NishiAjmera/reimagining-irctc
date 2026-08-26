@@ -44,6 +44,7 @@ Last updated: 26 August 2026
 - [x] Add a collapsible chat panel with a clear open and close control
 - [x] Add mouse, touch, and keyboard-accessible chat-width resizing
 - [x] Refine the chat workspace with a compact header, rail-icon reopen control, scroll fade, and borderless panel separation
+- [x] Replace the open-state divider with an inset conversation card and spacious visual gutter
 
 ## Current focus
 

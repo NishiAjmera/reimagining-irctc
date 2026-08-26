@@ -4,7 +4,7 @@ Last updated: 26 August 2026
 
 ## Overall status
 
-**Product refresh complete; public release in progress**
+**Product refresh complete and publicly released**
 
 ## Milestones
 
@@ -29,11 +29,11 @@ Last updated: 26 August 2026
 - [x] Simplify product copy and remove repetitive UI content
 - [x] Replace decorative AI-style treatments with a restrained product UI
 - [x] Revalidate lint, types, tests, build, and the signed-in journey flow
-- [ ] Publish the refreshed site with public link access
+- [x] Publish the refreshed site with public link access
 
 ## Current focus
 
-The refreshed product is being prepared for public-link access at [railease-journey-planner.nishiajmera21.chatgpt.site](https://railease-journey-planner.nishiajmera21.chatgpt.site). Access credentials are distributed separately and are never displayed in the UI or repository documentation.
+The refreshed product is live with public-link access at [railease-journey-planner.nishiajmera21.chatgpt.site](https://railease-journey-planner.nishiajmera21.chatgpt.site). Access credentials are distributed separately and are never displayed in the UI or repository documentation.
 
 ## Verification
 

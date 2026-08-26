@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, ArrowRight, CalendarDays, Check, GripVertical, Languages, LockKeyhole, MapPin, Menu, PanelLeftClose, PanelLeftOpen, Search, Send, ShieldCheck, TrainFront, UserRound, Users, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CalendarDays, Check, GripVertical, Languages, LockKeyhole, MapPin, Menu, PanelLeftClose, Search, Send, ShieldCheck, TrainFront, UserRound, Users, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { track } from '@/lib/analytics';
 import { cityNames } from '@/lib/data/stations';
@@ -248,10 +248,10 @@ function ConversationWorkspace({ initialQuery, onIntentChange, onChoose }: { ini
     ? suggestedQuestions.slice(0, 3).map((question) => ({ label: question, value: question }))
     : chatSuggestions(step);
   return <section className={`conversation-workspace ${chatOpen ? '' : 'chat-closed'} ${resizing ? 'is-resizing' : ''}`} style={{ '--chat-width': `${chatWidth}px` } as React.CSSProperties} aria-label="Conversational journey planner">
-    <button className="chat-toggle" type="button" onClick={() => setChatOpen((open) => !open)} aria-expanded={chatOpen} aria-label={chatOpen ? 'Close chat' : 'Open chat'}>{chatOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}</button>
+    {!chatOpen ? <button className="chat-reopen" type="button" onClick={() => setChatOpen(true)} aria-expanded="false" aria-controls="journey-chat" aria-label="Open RailEase chat" aria-describedby="chat-reopen-tooltip"><TrainFront size={18} /><span id="chat-reopen-tooltip" role="tooltip">Open chat</span></button> : null}
     {chatOpen ? <div className="chat-resizer" role="separator" aria-label="Resize chat" aria-orientation="vertical" aria-valuemin={320} aria-valuemax={680} aria-valuenow={chatWidth} tabIndex={0} onPointerDown={(event) => { event.preventDefault(); setResizing(true); }} onKeyDown={(event) => { if (event.key === 'ArrowLeft') setChatWidth((width) => Math.max(320, width - 24)); if (event.key === 'ArrowRight') setChatWidth((width) => Math.min(680, width + 24)); }}><GripVertical size={15} /></div> : null}
-    <div className="conversation-pane" aria-hidden={!chatOpen}>
-      <div className="conversation-heading"><span className="conversation-avatar"><TrainFront size={18} /></span><div><strong>RailEase planner</strong><span>Ask, compare, decide</span></div></div>
+    <div className="conversation-pane" id="journey-chat" aria-hidden={!chatOpen}>
+      <div className="conversation-heading"><span className="conversation-avatar"><TrainFront size={15} /></span><div><strong>RailEase</strong><span>Journey planner</span></div><button className="chat-collapse" type="button" onClick={() => setChatOpen(false)} aria-expanded="true" aria-controls="journey-chat" aria-label="Close chat"><PanelLeftClose size={17} /></button></div>
       <div className="conversation-thread" aria-live="polite">
         {messages.map((message) => <div className={`chat-message ${message.role}`} key={message.id}><span>{message.role === 'assistant' ? <TrainFront size={15} /> : <UserRound size={15} />}</span><p>{message.text}</p></div>)}
         <div ref={threadEnd} />

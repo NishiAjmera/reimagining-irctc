@@ -43,6 +43,7 @@ Last updated: 26 August 2026
 - [x] Animate the compact prompt expanding into the split chat workspace
 - [x] Add a collapsible chat panel with a clear open and close control
 - [x] Add mouse, touch, and keyboard-accessible chat-width resizing
+- [x] Refine the chat workspace with a compact header, rail-icon reopen control, scroll fade, and borderless panel separation
 
 ## Current focus
 

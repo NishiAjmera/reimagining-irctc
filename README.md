@@ -29,7 +29,7 @@ RailEase optimises for **time to confident choice**. AI is embedded as an intent
 - Date-aligned sample results across 16 major Indian cities
 - Optional server-side RailRadar timetable integration with automatic local fallback
 - Split planning workspace with persistent chat and confirmed results on the right
-- Collapsible, adjustable-width chat panel with keyboard-accessible resizing
+- Compact, collapsible chat with adjustable width, scroll-edge text fading, and keyboard-accessible controls
 
 ## Architecture
 

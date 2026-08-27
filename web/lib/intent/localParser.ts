@@ -9,9 +9,15 @@ const CITY_ALIASES: Array<[RegExp, string]> = [
   [/kolkata|calcutta/i, 'Kolkata'], [/lucknow/i, 'Lucknow'], [/bhopal/i, 'Bhopal'],
   [/patna/i, 'Patna'], [/kochi|cochin|ernakulam/i, 'Kochi'], [/bhubaneswar/i, 'Bhubaneswar'],
   [/chandigarh/i, 'Chandigarh'],
+  [/khategaon/i, 'Khategaon'], [/alibaug/i, 'Alibaug'], [/mahabaleshwar/i, 'Mahabaleshwar'],
+  [/madikeri|coorg/i, 'Madikeri'], [/munnar/i, 'Munnar'], [/mandawa/i, 'Mandawa'], [/harda/i, 'Harda'],
 ];
 
-const findCities = (input: string) => CITY_ALIASES.filter(([pattern]) => pattern.test(input)).map(([, city]) => city);
+const findCities = (input: string) => CITY_ALIASES
+  .map(([pattern, city]) => ({ city, index: input.search(pattern) }))
+  .filter((match) => match.index >= 0)
+  .sort((left, right) => left.index - right.index)
+  .map((match) => match.city);
 
 export class LocalIntentParser {
   parse(input: string): JourneyIntent {
@@ -25,6 +31,7 @@ export class LocalIntentParser {
     return {
       originCity: cities[0] ?? '',
       destinationCity: cities[1] ?? '',
+      journeyMode: /(?:include|add|with).*(?:bus|road)|complete journey|door[ -]to[ -]door/i.test(input) ? 'complete' : 'train_only',
       preferredDate: /next friday|28(?:th)? august|28 aug/i.test(input) ? DEMO_DATE : '2026-08-29',
       flexibilityDays: /next friday|flexible|nearby dates?|weekend/i.test(input) ? 1 : 0,
       arrivalBefore: hour !== undefined ? `${String(hour).padStart(2, '0')}:${arrivalMatch?.[2] ?? '00'}` : undefined,

@@ -57,6 +57,10 @@ Last updated: 27 August 2026
 - [x] Group all available travel classes within one card per train and preserve class-specific fare and availability
 - [x] Standardise the rail-chat launcher across direct and indirect journey contexts
 - [x] Add compact expected-platform and station-facility indicators beside station names
+- [x] Add towns without railway stations to the origin and destination selectors
+- [x] Keep train-only search available with an explicit user-selected railhead
+- [x] Add optional complete bus-and-train suggestions with transfer buffers and combined fares
+- [x] Carry multimodal journey details through traveller review, payment, and confirmation
 
 ## Current focus
 
@@ -84,6 +88,8 @@ The refreshed product is live with public-link access at [railease-journey-plann
 - Each train appears once with selectable class options and recalculated fare, availability, reasons, and trade-offs.
 - Direct, indirect, review, and payment contexts preserve the selected train class and station details.
 - Station rows show compact expected-platform, washroom, retiring-room, and AC waiting-room information with accessible labels.
+- Khategaon → Jaipur supports both a train-only search from Harda or Indore and a complete bus-to-station itinerary.
+- Multimodal results show bus operator, coach, seats, luggage, timing, connection buffer, and complete fare without forcing the bus option.
 
 ## Decisions
 

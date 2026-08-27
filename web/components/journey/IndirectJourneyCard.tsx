@@ -6,6 +6,7 @@ import type { JourneyLeg, JourneyOption } from '@/types/journey';
 import { TermTip } from '@/components/railway/TermTip';
 import { applyClassChoice, JourneyClassPicker } from './JourneyClassPicker';
 import { StationInlineInfo } from './StationInlineInfo';
+import { RoadConnectionStrip } from './RoadConnectionStrip';
 
 export function IndirectJourneyCard({ journey, onChoose }: { journey: JourneyOption; onChoose: (journey: JourneyOption) => void }) {
   const [selectedClassId, setSelectedClassId] = useState(journey.id);
@@ -17,6 +18,7 @@ export function IndirectJourneyCard({ journey, onChoose }: { journey: JourneyOpt
 
   return <article className="indirect-card" aria-labelledby={`journey-${journey.id}`}>
     <div className="indirect-card-head"><div><span>1 change</span><h3 id={`journey-${journey.id}`}>Via {journey.transfer?.station.city}</h3></div><div><strong>{formatDuration(journey.durationMinutes)}</strong><small>Total journey</small></div></div>
+    <RoadConnectionStrip journey={activeJourney} direction="to_station" />
     <div className="indirect-summary"><span>{formatClock(journey.departureDateTime)} <b>{journey.departureStation.code}</b></span><i /><span>{formatClock(journey.arrivalDateTime)} <b>{journey.arrivalStation.code}</b></span></div>
     <div className="indirect-legs">
       {legs.map((leg, index) => <div key={`${leg.id}-${index}`}>
@@ -24,6 +26,7 @@ export function IndirectJourneyCard({ journey, onChoose }: { journey: JourneyOpt
         {index === 0 && journey.transfer ? <div className="transfer-row"><MapPin size={15} /><span>Change at <b>{journey.transfer.station.name}</b></span><strong>{formatDuration(journey.transfer.durationMinutes)} transfer</strong></div> : null}
       </div>)}
     </div>
+    <RoadConnectionStrip journey={activeJourney} direction="from_station" />
     <div className="indirect-class-picker"><JourneyClassPicker journey={journey} selectedId={activeJourney.id} onSelect={(choice) => setSelectedClassId(choice.id)} /></div>
     <div className="indirect-footer"><div className="indirect-facts"><span><small>Class</small><strong><TermTip code={activeJourney.classOption.code} /></strong></span><span><small>Total fare</small><strong>₹{activeJourney.totalFare.toLocaleString('en-IN')}</strong></span><span><small>Availability</small><strong className={`status ${status.toLowerCase()}`}>{status === 'CONFIRMED' ? <Check size={15} /> : <TriangleAlert size={15} />}{statusText}</strong></span></div><button className="choose-button" type="button" onClick={() => onChoose(activeJourney)}>Choose connection <ArrowRight size={17} /></button></div>
   </article>;

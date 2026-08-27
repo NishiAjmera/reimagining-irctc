@@ -64,4 +64,14 @@ describe('journey ranking', () => {
     expect(outcome.options[0].classChoices?.map((choice) => choice.classOption.code)).toEqual(['2A', '3A', 'SL']);
     expect(outcome.options[0].classChoices?.find((choice) => choice.classOption.code === '3A')?.id).toBe(outcome.options[0].id);
   });
+
+  it('keeps station access optional for a town without rail service', () => {
+    const base = { ...intent, originCity: 'Khategaon', originRailCity: 'Harda', destinationCity: 'Jaipur' };
+    const trainOnly = rankJourneys({ ...base, journeyMode: 'train_only' });
+    const complete = rankJourneys({ ...base, journeyMode: 'complete' });
+    expect(trainOnly.options[0].departureStation.city).toBe('Harda');
+    expect(trainOnly.options[0].roadLegs).toBeUndefined();
+    expect(complete.options[0].roadLegs?.[0]).toMatchObject({ originName: 'Khategaon Bus Stand', direction: 'to_station' });
+    expect(complete.options[0].totalFare).toBeGreaterThan(trainOnly.options[0].totalFare);
+  });
 });

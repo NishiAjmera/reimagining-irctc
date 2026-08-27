@@ -38,6 +38,8 @@ RailEase optimises for **time to confident choice**. AI is embedded as an intent
 - Contextual journey-help chat on the manual details review page
 - Consistent rail-chat launchers across direct and indirect journey flows
 - Compact expected-platform and station-facility indicators beside each boarding and arrival station
+- Optional train-only or complete bus-and-train planning for towns without railway stations
+- Nearby railhead selection, connection buffers, bus details, and combined journey fares carried through checkout
 
 ## Architecture
 
@@ -64,7 +66,7 @@ The `JourneyExplainer`-style helpers answer common contextual questions locally.
 
 ## Train data
 
-RailEase currently covers Ahmedabad, Bengaluru, Bhopal, Bhubaneswar, Chandigarh, Chennai, Delhi, Hyderabad, Indore, Jaipur, Kochi, Kolkata, Lucknow, Mumbai, Patna, and Pune. Known corridors use seeded train names and numbers; other supported city pairs receive three realistic sample services aligned to the selected date.
+RailEase currently covers Ahmedabad, Bengaluru, Bhopal, Bhubaneswar, Chandigarh, Chennai, Delhi, Harda, Hyderabad, Indore, Jaipur, Kochi, Kolkata, Lucknow, Mumbai, Patna, and Pune. Town coverage includes Khategaon, Alibaug, Mahabaleshwar, Madikeri, Munnar, and Mandawa. Known corridors use seeded train names and numbers; other supported city pairs receive three realistic sample services aligned to the selected date.
 
 The conversational search smoothly expands after the first message, keeps the planning thread on the left, and builds an editable trip summary on the right. It asks only for missing essentials, waits for confirmation, then replaces the summary with ranked train results. The chat can be collapsed or resized with a pointer or keyboard without losing the conversation. The transition respects reduced-motion preferences. The original **Search by details** tab remains available for users who prefer a manual form.
 

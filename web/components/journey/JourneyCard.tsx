@@ -6,6 +6,7 @@ import { track } from '@/lib/analytics';
 import type { JourneyOption } from '@/types/journey';
 import { applyClassChoice, JourneyClassPicker } from './JourneyClassPicker';
 import { StationInlineInfo } from './StationInlineInfo';
+import { RoadConnectionStrip } from './RoadConnectionStrip';
 
 const badgeCopy = {
   BEST_OVERALL: ['Recommended', 'Best overall'], CHEAPEST: ['Save ₹850', 'Budget choice'],
@@ -35,17 +36,20 @@ export function JourneyCard({ journey, index, onChoose, isOtherOption = false }:
           <div><p className="option-title">{title}</p><h3 id={`journey-${journey.id}`}>{journey.trainName}</h3><span className="train-number">#{journey.trainNumber}</span></div>
         </div>
 
+        <RoadConnectionStrip journey={activeJourney} direction="to_station" />
+
         <div className="route-timeline">
           <div className="time-block"><strong>{formatClock(journey.departureDateTime)}</strong><span>{formatDate(journey.departureDateTime)}</span><b>{journey.departureStation.code}</b><small>{journey.departureStation.name}</small><StationInlineInfo station={journey.departureStation} trainNumber={journey.trainNumber} direction="departure" /></div>
           <div className="duration-line"><span><Clock3 size={13} /> {formatDuration(journey.durationMinutes)}</span><i /><em>{journey.tags.includes('overnight') ? 'Overnight' : 'Day journey'}</em></div>
           <div className="time-block arrival"><strong>{formatClock(journey.arrivalDateTime)}</strong><span>{formatDate(journey.arrivalDateTime)}</span><b>{journey.arrivalStation.code}</b><small>{journey.arrivalStation.name}</small><StationInlineInfo station={journey.arrivalStation} trainNumber={journey.trainNumber} direction="arrival" /></div>
         </div>
+        <RoadConnectionStrip journey={activeJourney} direction="from_station" />
 
         <div className="journey-metrics">
           <JourneyClassPicker journey={journey} selectedId={activeJourney.id} onSelect={(choice) => setSelectedClassId(choice.id)} />
         </div>
 
-        <div className="selected-class-summary"><span><small>Selected</small><strong>{activeJourney.classOption.name}</strong></span><span><small>Total fare</small><strong>₹{activeJourney.totalFare.toLocaleString('en-IN')}</strong></span><span><small>Availability</small><strong className={`status ${status.toLowerCase()}`}>{status === 'CONFIRMED' ? <Check size={16} /> : <TriangleAlert size={16} />}{statusText}</strong></span></div>
+        <div className="selected-class-summary"><span><small>Selected</small><strong>{activeJourney.classOption.name}</strong></span><span><small>{activeJourney.roadLegs?.length ? 'Complete fare' : 'Total fare'}</small><strong>₹{activeJourney.totalFare.toLocaleString('en-IN')}</strong></span><span><small>Availability</small><strong className={`status ${status.toLowerCase()}`}>{status === 'CONFIRMED' ? <Check size={16} /> : <TriangleAlert size={16} />}{statusText}</strong></span></div>
         <div className="reason-strip"><p>{activeJourney.reasons.slice(0, 2).join(' · ')}</p></div>
         {activeJourney.tradeoffs.length ? <div className="tradeoff-strip"><span>Trade-off</span><p>{activeJourney.tradeoffs[0]}</p></div> : null}
         <div className="card-actions">

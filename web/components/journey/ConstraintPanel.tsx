@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { JourneyIntent, RankingPriority } from '@/types/journey';
 import { CitySelect } from './CitySelect';
 import { RailChatIcon } from './RailChatIcon';
+import { JourneyModePicker } from './JourneyModePicker';
 
 type Props = { intent: JourneyIntent; onChange: (intent: JourneyIntent) => void; onSearch: () => void; onBack: () => void };
 
@@ -28,6 +29,8 @@ export function ConstraintPanel({ intent, onChange, onSearch, onBack }: Props) {
         <label>Travel date<input type="date" value={intent.preferredDate} onChange={(event) => set('preferredDate', event.target.value)} /></label>
         <label>Arrive before<input type="time" value={intent.arrivalBefore ?? ''} onChange={(event) => set('arrivalBefore', event.target.value || undefined)} /></label>
       </div>
+
+      <JourneyModePicker intent={intent} onChange={onChange} />
 
       <div className="preference-row">
         <div className="passenger-stepper">

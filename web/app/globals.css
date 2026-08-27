@@ -76,6 +76,61 @@ textarea::placeholder { color: #84909a; }
   .trust-row { flex-direction: column; margin-top: 42px; }
 }
 
+/* Optional town-to-station planning */
+.journey-mode-picker { display: grid; gap: 16px; margin: 22px 0; padding: 22px 24px; border-radius: 16px; background: #f0f4f1; }
+.journey-mode-picker h2 { margin: 4px 0 0; font-size: 20px; }
+.journey-mode-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.journey-mode-options button { min-height: 76px; display: flex; align-items: flex-start; gap: 12px; padding: 16px; border: 1px solid #ccd4cf; border-radius: 13px; background: rgba(255,255,255,.72); color: var(--ink); text-align: left; }
+.journey-mode-options button > svg { flex: 0 0 auto; margin-top: 2px; color: #587064; }
+.journey-mode-options button span { display: grid; gap: 4px; }
+.journey-mode-options button strong { font-size: 14px; }
+.journey-mode-options button small { color: var(--muted); font-size: 11px; line-height: 1.45; }
+.journey-mode-options button.selected { border-color: #0f6e63; background: #fff; box-shadow: 0 0 0 2px rgba(15,110,99,.09); }
+.journey-mode-options button.selected > svg { color: #0f6e63; }
+.railhead-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.railhead-fields label { color: #4f6271; font-size: 10px; font-weight: 750; text-transform: uppercase; letter-spacing: .07em; }
+.railhead-fields select { width: 100%; min-height: 45px; margin-top: 7px; padding: 0 12px; border: 1px solid #c7cbc9; border-radius: 10px; background: white; color: var(--ink); font-size: 13px; text-transform: none; letter-spacing: normal; }
+.journey-mode-note { margin: 0; color: #5d706b; font-size: 11px; line-height: 1.5; }
+.journey-mode-picker.compact { margin: 18px 0; padding: 18px; }
+.journey-mode-picker.compact h2 { font-size: 17px; }
+
+.journey-mode-notice { display: flex; align-items: flex-start; gap: 12px; margin: 0 0 20px; padding: 15px 17px; border-radius: 12px; background: #f0f1ed; color: #425565; }
+.journey-mode-notice > span { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 10px; background: #fff; color: #526674; }
+.journey-mode-notice div { display: grid; gap: 3px; }
+.journey-mode-notice strong { color: var(--ink); font-size: 13px; }
+.journey-mode-notice p { margin: 0; font-size: 11px; line-height: 1.5; }
+.journey-mode-notice.complete { background: #e8f2ef; }
+.journey-mode-notice.complete > span { color: #0d7567; }
+
+.road-connections { display: grid; gap: 9px; margin: 20px 0 4px; }
+.road-leg { display: grid; grid-template-columns: 38px minmax(0, 1.5fr) minmax(150px, .8fr) auto; align-items: center; gap: 12px; padding: 14px 15px; border-radius: 12px; background: #eaf3f0; color: #244351; }
+.road-leg-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; background: #fff; color: #0c7566; }
+.road-leg-main, .road-leg-time { display: grid; gap: 3px; min-width: 0; }
+.road-leg-main > span { color: #0c7566; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; }
+.road-leg-main strong { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.road-leg-main small, .road-leg-time small { color: #62777b; font-size: 9px; }
+.road-leg-time { text-align: right; }
+.road-leg-time strong { font-size: 12px; }
+.road-leg-time small { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+.road-leg-meta { display: grid; justify-items: end; gap: 3px; padding-left: 12px; border-left: 1px solid rgba(36,67,81,.14); font-size: 9px; }
+.road-leg-meta span { display: flex; align-items: center; gap: 4px; color: #62777b; }
+.road-leg-meta strong { margin-top: 2px; font-size: 13px; }
+.booking-ticket > .road-connections { margin: 0; padding: 16px 20px 0; }
+.booking-ticket.compact > .road-connections { padding: 10px 10px 0; }
+.road-connections.compact .road-leg { grid-template-columns: 30px 1fr; padding: 10px; }
+.road-connections.compact .road-leg-icon { width: 28px; height: 28px; }
+.road-connections.compact .road-leg-time { grid-column: 2; text-align: left; }
+.road-connections.compact .road-leg-time small { justify-content: flex-start; }
+
+@media (max-width: 720px) {
+  .journey-mode-picker { padding: 18px 15px; }
+  .journey-mode-options, .railhead-fields { grid-template-columns: 1fr; }
+  .road-leg { grid-template-columns: 34px 1fr; }
+  .road-leg-time { grid-column: 2; text-align: left; }
+  .road-leg-time small { justify-content: flex-start; }
+  .road-leg-meta { grid-column: 2; justify-items: start; padding: 8px 0 0; border-left: 0; border-top: 1px solid rgba(36,67,81,.14); }
+}
+
 /* Product UI refinement */
 .primary-button { border-radius: 8px; box-shadow: none; }
 .primary-button:active { transform: none; box-shadow: none; }

@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, CreditCard, GripVertical, Languages, Landmark, LockKeyhole, MapPin, Menu, PanelLeftClose, Search, Send, ShieldCheck, Smartphone, TicketCheck, TrainFront, UserRound, Users, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BusFront, CalendarDays, Check, Clock3, CreditCard, GripVertical, Languages, Landmark, LockKeyhole, MapPin, Menu, PanelLeftClose, Search, Send, ShieldCheck, Smartphone, TicketCheck, TrainFront, UserRound, Users, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { track } from '@/lib/analytics';
 import { explainQuestion, suggestedQuestions } from '@/lib/explanation/recommendation';
@@ -15,6 +15,9 @@ import { IndirectJourneyCard } from './IndirectJourneyCard';
 import { PriorityPanel } from './PriorityPanel';
 import { RailChatIcon } from './RailChatIcon';
 import { StationInlineInfo } from './StationInlineInfo';
+import { JourneyModePicker } from './JourneyModePicker';
+import { RoadConnectionStrip } from './RoadConnectionStrip';
+import { hasRoadConnection, resolveRailCity } from '@/lib/data/locations';
 
 type Stage = 'home' | 'chat' | 'constraints' | 'searching' | 'results' | 'booking' | 'payment' | 'confirmed';
 type SearchMode = 'describe' | 'structured';
@@ -29,7 +32,7 @@ const ACCESS_DIGESTS = {
 
 export const DEMO_PROMPT = "I need to travel from Bengaluru to Jaipur next Friday for a wedding. I need to reach by 4 PM. We’re three people including my mother, and I don’t want a waitlisted ticket.";
 
-const emptyStructured = { origin: 'Indore', destination: 'Delhi', date: '2026-08-29', passengers: 1 };
+const emptyStructured = { origin: 'Khategaon', destination: 'Jaipur', date: '2026-08-29', passengers: 1 };
 
 export function JourneyPlanner() {
   const [stage, setStage] = useState<Stage>('home');
@@ -58,7 +61,7 @@ export function JourneyPlanner() {
   const submitStructured = () => {
     if (!structured.origin || !structured.destination || !structured.date) { setError('Add an origin, destination and travel date.'); return; }
     setError('');
-    setIntent({ originCity: structured.origin, destinationCity: structured.destination, preferredDate: structured.date, flexibilityDays: 1, passengerCount: structured.passengers, seniorTraveller: false, confirmedOnly: false, comfortPreference: 'any', rankingPriority: 'best' });
+    setIntent({ originCity: structured.origin, destinationCity: structured.destination, preferredDate: structured.date, flexibilityDays: 1, passengerCount: structured.passengers, seniorTraveller: false, confirmedOnly: false, comfortPreference: 'any', rankingPriority: 'best', journeyMode: 'train_only' });
     setStage('constraints'); track('intent_submitted', { mode: 'structured' });
   };
 
@@ -142,9 +145,9 @@ type HomeProps = {
 };
 
 function HomeSearch({ mode, setMode, query, setQuery, structured, setStructured, error, tryDemo, submitAI, submitStructured }: HomeProps) {
-  return <section className="hero-shell"><div className="hero-copy"><p className="eyebrow">Rail journey planner</p><h1>Plan a train journey.</h1><p className="lede">Tell us what matters and get a short list of practical options.</p></div>
+  return <section className="hero-shell"><div className="hero-copy"><p className="eyebrow">Rail journey planner</p><h1>Plan the journey that works.</h1><p className="lede">Search trains directly or include connections from a nearby town.</p></div>
     <section id="planner" className="planner-card" aria-labelledby="planner-title"><div className="planner-tabs" role="tablist" aria-label="Journey search method"><button role="tab" aria-selected={mode === 'describe'} onClick={() => { setMode('describe'); track('journey_started', { mode: 'describe' }); }}>Describe trip</button><button role="tab" aria-selected={mode === 'structured'} onClick={() => { setMode('structured'); track('journey_started', { mode: 'structured' }); }}><MapPin size={16} /> Search by details</button></div>
-      {mode === 'describe' ? <div className="planner-body"><div className="planner-heading"><div><p className="section-label">Your trip</p><h2 id="planner-title">Where are you going?</h2></div><button className="demo-button" type="button" onClick={tryDemo}>Use example</button></div><label className="sr-only" htmlFor="journey-query">Describe your journey</label><textarea id="journey-query" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Bengaluru to Jaipur next Friday. Three travellers. Arrive before 4 PM, confirmed seats only." rows={4} onKeyDown={(event) => { if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') submitAI(); }} />{error ? <p className="form-error" role="alert">{error}</p> : null}<div className="planner-actions"><span /><button className="primary-button" type="button" onClick={submitAI}>Continue <ArrowRight size={18} /></button></div></div> : <StructuredSearch value={structured} onChange={setStructured} onSubmit={submitStructured} error={error} />}
+      {mode === 'describe' ? <div className="planner-body"><div className="planner-heading"><div><p className="section-label">Your trip</p><h2 id="planner-title">Where are you going?</h2></div><button className="demo-button" type="button" onClick={tryDemo}>Use example</button></div><label className="sr-only" htmlFor="journey-query">Describe your journey</label><textarea id="journey-query" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Khategaon to Jaipur next Friday. Include a bus to the station." rows={4} onKeyDown={(event) => { if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') submitAI(); }} />{error ? <p className="form-error" role="alert">{error}</p> : null}<div className="planner-actions"><span /><button className="primary-button" type="button" onClick={submitAI}>Continue <ArrowRight size={18} /></button></div></div> : <StructuredSearch value={structured} onChange={setStructured} onSubmit={submitStructured} error={error} />}
     </section>
   </section>;
 }
@@ -153,7 +156,7 @@ function StructuredSearch({ value, onChange, onSubmit, error }: { value: typeof 
   return <div className="planner-body structured-body"><div className="planner-heading"><div><p className="section-label">Journey details</p><h2 id="planner-title">Search trains</h2></div></div><div className="structured-grid"><label>From<CitySelect value={value.origin} exclude={value.destination} onChange={(origin) => onChange({ ...value, origin })} /></label><button className="swap-button" type="button" aria-label="Swap origin and destination" onClick={() => onChange({ ...value, origin: value.destination, destination: value.origin })}>⇄</button><label>To<CitySelect value={value.destination} exclude={value.origin} onChange={(destination) => onChange({ ...value, destination })} /></label><label>Date<input type="date" value={value.date} onChange={(event) => onChange({ ...value, date: event.target.value })} /></label><label>Travellers<input type="number" min="1" max="8" value={value.passengers} onChange={(event) => onChange({ ...value, passengers: Number(event.target.value) })} /></label></div>{error ? <p className="form-error" role="alert">{error}</p> : null}<div className="planner-actions"><span /><button className="primary-button" type="button" onClick={onSubmit}>Continue <ArrowRight size={18} /></button></div></div>;
 }
 
-type ChatStep = 'route' | 'date' | 'passengers' | 'preference' | 'confirm';
+type ChatStep = 'route' | 'date' | 'passengers' | 'preference' | 'connections' | 'confirm';
 type ChatMessage = { id: number; role: 'assistant' | 'user'; text: string };
 type ChatPanel = 'details' | 'searching' | 'results';
 
@@ -225,6 +228,9 @@ function ConversationWorkspace({ initialQuery, onIntentChange, onChoose }: { ini
       nextStep = 'preference';
     } else if (step === 'preference') {
       nextDraft = applyPreference(draft, text);
+      nextStep = needsRoadChoice(nextDraft) ? 'connections' : 'confirm';
+    } else if (step === 'connections') {
+      nextDraft = { ...draft, journeyMode: /include|complete|bus|suggest/i.test(text) ? 'complete' : 'train_only' };
       nextStep = 'confirm';
     } else {
       addAssistant('You can update the trip details on the right, then search when everything looks right.');
@@ -238,7 +244,7 @@ function ConversationWorkspace({ initialQuery, onIntentChange, onChoose }: { ini
   const searchFromChat = async () => {
     if (!draft.originCity || !draft.destinationCity) { setStep('route'); addAssistant('Which cities are you travelling between?'); return; }
     setPanel('searching');
-    addAssistant(`Searching ${draft.originCity} to ${draft.destinationCity}. I’ll keep the best options short.`);
+    addAssistant(draft.journeyMode === 'complete' ? `Building complete journey options from ${draft.originCity} to ${draft.destinationCity}.` : `Searching trains from ${resolveRailCity(draft.originCity, draft.originRailCity)} to ${resolveRailCity(draft.destinationCity, draft.destinationRailCity)}.`);
     try {
       const response = await fetch('/api/trains', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft) });
       if (!response.ok) throw new Error('Search unavailable');
@@ -283,6 +289,7 @@ function ChatTripDetails({ intent, pendingStep, onChange, onSearch }: { intent: 
   return <div className="chat-trip-details"><p className="section-label">Your journey</p><div className="panel-title"><h2>Trip details</h2><span>{pendingStep === 'confirm' ? 'Ready to search' : 'Needs details'}</span></div>
     <div className="chat-detail-grid"><label>From<CitySelect value={intent.originCity} exclude={intent.destinationCity} onChange={(city) => set('originCity', city)} /></label><label>To<CitySelect value={intent.destinationCity} exclude={intent.originCity} onChange={(city) => set('destinationCity', city)} /></label><label>Date<input type="date" value={pendingStep === 'date' || pendingStep === 'route' ? '' : intent.preferredDate} onChange={(event) => set('preferredDate', event.target.value)} /></label><label>Travellers<input type="number" min="1" max="8" value={pendingStep === 'passengers' || pendingStep === 'date' || pendingStep === 'route' ? '' : intent.passengerCount} onChange={(event) => set('passengerCount', Math.max(1, Math.min(8, Number(event.target.value))))} /></label></div>
     <div className="chat-preferences"><label><input type="checkbox" checked={intent.confirmedOnly} onChange={(event) => set('confirmedOnly', event.target.checked)} /> Confirmed seats</label><label><input type="checkbox" checked={intent.seniorTraveller} onChange={(event) => set('seniorTraveller', event.target.checked)} /> Senior traveller</label></div>
+    <JourneyModePicker intent={intent} onChange={onChange} compact />
     <label className="chat-priority">Priority<select value={intent.rankingPriority} onChange={(event) => set('rankingPriority', event.target.value as JourneyIntent['rankingPriority'])}><option value="best">Best overall</option><option value="confirmation">Seat confirmation</option><option value="price">Lowest fare</option><option value="duration">Shortest time</option><option value="arrival">Arrival time</option></select></label>
     <button className="primary-button panel-search-button" type="button" onClick={onSearch} disabled={pendingStep !== 'confirm' || !intent.originCity || !intent.destinationCity}>Search trains <ArrowRight size={17} /></button>
   </div>;
@@ -290,6 +297,7 @@ function ChatTripDetails({ intent, pendingStep, onChange, onSearch }: { intent: 
 
 function ConversationResults({ intent, outcome, source, onEdit, onChoose }: { intent: JourneyIntent; outcome: SearchOutcome; source: DataSource; onEdit: () => void; onChoose: (journey: JourneyOption) => void }) {
   return <div className="conversation-results"><div className="conversation-results-head"><button className="back-link" type="button" onClick={onEdit}><ArrowLeft size={15} /> Details</button><div><p className="section-label">Best options</p><h2>{intent.originCity} → {intent.destinationCity}</h2><span>{formatTravelDate(intent.preferredDate)} · {intent.passengerCount} travellers</span></div></div>
+    <JourneyModeNotice intent={intent} />
     {outcome.options.length ? <div className="journey-list">{outcome.options.map((journey, index) => <JourneyCard key={journey.id} journey={journey} index={index} onChoose={onChoose} />)}</div> : <div className="panel-empty"><Search size={25} /><h2>No direct match</h2><p>Change the date or cities and try again.</p></div>}
     {outcome.otherOptions.length ? <OtherJourneyOptions journeys={outcome.otherOptions} startIndex={outcome.options.length} onChoose={onChoose} /> : null}
     {outcome.indirectOptions.length ? <IndirectJourneyOptions journeys={outcome.indirectOptions} onChoose={onChoose} /> : null}
@@ -302,6 +310,7 @@ function getInitialChatStep(query: string, intent: JourneyIntent): ChatStep {
   if (!/(today|tomorrow|next\s+\w+|\d{4}-\d{2}-\d{2}|\d{1,2}\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec))/i.test(query)) return 'date';
   if (!/(\d+|one|two|three|four|five|six|seven|eight)\s+(people|travellers?|passengers?)/i.test(query)) return 'passengers';
   if (!/(confirmed|waitlist|cheap|budget|fare|fast|short|arrive|reach|senior|mother|father|comfort)/i.test(query)) return 'preference';
+  if (needsRoadChoice(intent) && !/(bus|complete journey|door[ -]to[ -]door|reach (?:the )?station|arrange.*station)/i.test(query)) return 'connections';
   return 'confirm';
 }
 
@@ -310,6 +319,7 @@ function chatQuestion(step: ChatStep, intent: JourneyIntent) {
   if (step === 'date') return `Got it — ${intent.originCity} to ${intent.destinationCity}. What date would you like to travel?`;
   if (step === 'passengers') return 'How many people are travelling?';
   if (step === 'preference') return 'What matters most: confirmed seats, lowest fare, or shortest travel time?';
+  if (step === 'connections') return `Would you like me to include a bus connection to the railway station, or will you arrange that part yourself?`;
   return 'I’ve put the trip together on the right. Does everything look right?';
 }
 
@@ -317,6 +327,7 @@ function chatSuggestions(step: ChatStep) {
   if (step === 'date') return [{ label: 'Fri, 28 Aug', value: '2026-08-28' }, { label: 'Sat, 29 Aug', value: '2026-08-29' }];
   if (step === 'passengers') return [1, 2, 3, 4].map((count) => ({ label: `${count}`, value: `${count}` }));
   if (step === 'preference') return [{ label: 'Confirmed seats', value: 'Confirmed seats' }, { label: 'Lowest fare', value: 'Lowest fare' }, { label: 'Shortest time', value: 'Shortest time' }, { label: 'No preference', value: 'No preference' }];
+  if (step === 'connections') return [{ label: 'Include bus connection', value: 'Include bus connection' }, { label: 'I’ll reach the station', value: 'I will arrange travel to the station' }];
   if (step === 'confirm') return [{ label: 'Search trains', value: 'Search trains' }, { label: 'Change details', value: 'Change details' }];
   return [];
 }
@@ -341,13 +352,25 @@ function applyPreference(intent: JourneyIntent, value: string): JourneyIntent {
   return { ...intent, rankingPriority: 'best' };
 }
 
+function needsRoadChoice(intent: JourneyIntent) {
+  return hasRoadConnection(intent.originCity) || hasRoadConnection(intent.destinationCity);
+}
+
 function Searching({ intent }: { intent: JourneyIntent }) {
   return <section className="searching-screen" role="status" aria-live="polite"><div className="simple-loader"><TrainFront size={24} /></div><p className="screen-kicker">{intent.originCity} → {intent.destinationCity}</p><h1>Finding suitable journeys…</h1><p>Checking nearby dates, stations and classes.</p></section>;
 }
 
 function Results({ intent, outcome, dataSource, onEdit, onChoose, onDemo }: { intent: JourneyIntent; outcome: SearchOutcome; dataSource: DataSource; onEdit: () => void; onChoose: (journey: JourneyOption) => void; onDemo: () => void }) {
   if (!outcome.options.length) return <section className="empty-state screen-shell"><Search size={32} /><p className="screen-kicker">No direct match</p><h1>Try one of these alternatives.</h1><ul>{outcome.alternatives.map((item) => <li key={item}><Check /> {item}</li>)}</ul><div><button className="secondary-button" onClick={onEdit}>Edit journey</button><button className="primary-button" onClick={onDemo}>Use demo trip</button></div></section>;
-  return <section className="results-screen"><div className="results-header"><div><button type="button" className="back-link" onClick={onEdit}><ArrowLeft size={15} /> Edit</button><h1>{intent.originCity} <span>→</span> {intent.destinationCity}</h1></div><div className="journey-summary"><span><CalendarDays size={16} /> {formatTravelDate(intent.preferredDate)}</span><span><Users size={16} /> {intent.passengerCount} travellers</span>{intent.confirmedOnly ? <span><ShieldCheck size={16} /> Confirmed only</span> : null}</div></div><div className="results-layout"><div className="journey-list">{outcome.options.map((journey, index) => <JourneyCard key={journey.id} journey={journey} index={index} onChoose={onChoose} />)}{outcome.otherOptions.length ? <OtherJourneyOptions journeys={outcome.otherOptions} startIndex={outcome.options.length} onChoose={onChoose} /> : null}{outcome.indirectOptions.length ? <IndirectJourneyOptions journeys={outcome.indirectOptions} onChoose={onChoose} /> : null}</div><PriorityPanel intent={intent} /></div><p className="data-note">{dataSource === 'railradar' ? 'Direct timetables use RailRadar data. Connections, fares and seat status are illustrative.' : 'Sample timetables, fares and seat status.'}</p><ContextQuestions journey={outcome.options[0]} intent={intent} /></section>;
+  return <section className="results-screen"><div className="results-header"><div><button type="button" className="back-link" onClick={onEdit}><ArrowLeft size={15} /> Edit</button><h1>{intent.originCity} <span>→</span> {intent.destinationCity}</h1></div><div className="journey-summary"><span><CalendarDays size={16} /> {formatTravelDate(intent.preferredDate)}</span><span><Users size={16} /> {intent.passengerCount} travellers</span>{intent.confirmedOnly ? <span><ShieldCheck size={16} /> Confirmed only</span> : null}</div></div><JourneyModeNotice intent={intent} /><div className="results-layout"><div className="journey-list">{outcome.options.map((journey, index) => <JourneyCard key={journey.id} journey={journey} index={index} onChoose={onChoose} />)}{outcome.otherOptions.length ? <OtherJourneyOptions journeys={outcome.otherOptions} startIndex={outcome.options.length} onChoose={onChoose} /> : null}{outcome.indirectOptions.length ? <IndirectJourneyOptions journeys={outcome.indirectOptions} onChoose={onChoose} /> : null}</div><PriorityPanel intent={intent} /></div><p className="data-note">{dataSource === 'railradar' ? 'Direct train timetables use RailRadar data. Bus connections, fares and seat status are illustrative.' : 'Sample train and bus timetables, fares and seat status.'}</p><ContextQuestions journey={outcome.options[0]} intent={intent} /></section>;
+}
+
+function JourneyModeNotice({ intent }: { intent: JourneyIntent }) {
+  if (!needsRoadChoice(intent)) return null;
+  const originRail = resolveRailCity(intent.originCity, intent.originRailCity);
+  const destinationRail = resolveRailCity(intent.destinationCity, intent.destinationRailCity);
+  const railRoute = `${originRail} → ${destinationRail}`;
+  return <div className={`journey-mode-notice ${intent.journeyMode === 'complete' ? 'complete' : ''}`}><span>{intent.journeyMode === 'complete' ? <BusFront size={18} /> : <TrainFront size={18} />}</span><div><strong>{intent.journeyMode === 'complete' ? 'Complete journey suggestions' : 'Train-only results'}</strong><p>{intent.journeyMode === 'complete' ? `Bus connections and transfer time are included with the ${railRoute} train.` : `Showing trains for ${railRoute}. You’ll arrange the rest of the journey.`}</p></div></div>;
 }
 
 function OtherJourneyOptions({ journeys, startIndex, onChoose }: { journeys: JourneyOption[]; startIndex: number; onChoose: (journey: JourneyOption) => void }) {
@@ -363,7 +386,7 @@ function Booking({ intent, journey, details, onChange, onBack, onContinue }: { i
   return <section className="booking-screen screen-shell">
     <CheckoutSteps current="travellers" />
     <button className="back-link" type="button" onClick={onBack}><ArrowLeft size={15} /> Change journey</button>
-    <div className="checkout-heading"><p className="screen-kicker">Review & book</p><h1>{intent.originCity} to {intent.destinationCity}</h1><p>Confirm the train and add traveller details.</p></div>
+    <div className="checkout-heading"><p className="screen-kicker">Review & book</p><h1>{intent.originCity} to {intent.destinationCity}</h1><p>Confirm the complete journey and add traveller details.</p></div>
     <SelectedJourney journey={journey} intent={intent} />
     <form className="traveller-form" onSubmit={(event) => { event.preventDefault(); onContinue(); }}>
       <div className="form-section-heading"><div><p className="section-label">Travellers</p><h2>Passenger details</h2></div><span>{intent.passengerCount} {intent.passengerCount === 1 ? 'traveller' : 'travellers'}</span></div>
@@ -375,7 +398,7 @@ function Booking({ intent, journey, details, onChange, onBack, onContinue }: { i
 }
 
 function SelectedJourney({ journey, intent, compact = false }: { journey: JourneyOption; intent: JourneyIntent; compact?: boolean }) {
-  return <article className={`booking-ticket ${compact ? 'compact' : ''}`}><div className="ticket-head"><span>Selected journey</span><strong>{journey.trainName}</strong><small>{journey.legs?.length ? `${journey.legs.length} trains` : `#${journey.trainNumber}`}</small></div><div className="ticket-route"><div><strong>{formatClock(journey.departureDateTime)}</strong><span>{formatDateTime(journey.departureDateTime)}</span><b>{journey.departureStation.code}</b><small>{journey.departureStation.name}</small>{!compact ? <StationInlineInfo station={journey.departureStation} trainNumber={journey.legs?.[0]?.trainNumber ?? journey.trainNumber} direction="departure" /> : null}</div><div className="ticket-duration"><span><Clock3 size={14} /> {formatDuration(journey.durationMinutes)}</span><i /><em>{journey.transfer ? `Change at ${journey.transfer.station.city}` : journey.tags.includes('overnight') ? 'Overnight' : 'Day journey'}</em></div><div><strong>{formatClock(journey.arrivalDateTime)}</strong><span>{formatDateTime(journey.arrivalDateTime)}</span><b>{journey.arrivalStation.code}</b><small>{journey.arrivalStation.name}</small>{!compact ? <StationInlineInfo station={journey.arrivalStation} trainNumber={journey.legs?.at(-1)?.trainNumber ?? journey.trainNumber} direction="arrival" /> : null}</div></div>{journey.legs?.length ? <div className="ticket-connection">{journey.legs.map((leg, index) => <span key={`${leg.id}-${index}`}><b>Train {index + 1}: {leg.trainName}</b><small>#{leg.trainNumber} · {formatClock(leg.departureDateTime)} {leg.departureStation.code} → {formatClock(leg.arrivalDateTime)} {leg.arrivalStation.code}</small></span>)}</div> : null}<div className="ticket-meta"><span><b>{formatTravelDate(intent.preferredDate)}</b>Date</span><span><b>{journey.classOption.code}</b>{journey.classOption.name}</span><span><b>{intent.passengerCount}</b>Travellers</span><span><b>₹{journey.totalFare.toLocaleString('en-IN')}</b>Base fare</span></div></article>;
+  return <article className={`booking-ticket ${compact ? 'compact' : ''}`}><div className="ticket-head"><span>Selected journey</span><strong>{journey.roadLegs?.length ? `${intent.originCity} to ${intent.destinationCity}` : journey.trainName}</strong><small>{journey.roadLegs?.length ? `${journey.roadLegs.length} bus + ${journey.legs?.length ?? 1} train` : journey.legs?.length ? `${journey.legs.length} trains` : `#${journey.trainNumber}`}</small></div><RoadConnectionStrip journey={journey} compact={compact} direction="to_station" /><div className="ticket-route"><div><strong>{formatClock(journey.departureDateTime)}</strong><span>{formatDateTime(journey.departureDateTime)}</span><b>{journey.departureStation.code}</b><small>{journey.departureStation.name}</small>{!compact ? <StationInlineInfo station={journey.departureStation} trainNumber={journey.legs?.[0]?.trainNumber ?? journey.trainNumber} direction="departure" /> : null}</div><div className="ticket-duration"><span><Clock3 size={14} /> {formatDuration(journey.durationMinutes)}</span><i /><em>{journey.transfer ? `Change at ${journey.transfer.station.city}` : journey.tags.includes('overnight') ? 'Overnight' : 'Day journey'}</em></div><div><strong>{formatClock(journey.arrivalDateTime)}</strong><span>{formatDateTime(journey.arrivalDateTime)}</span><b>{journey.arrivalStation.code}</b><small>{journey.arrivalStation.name}</small>{!compact ? <StationInlineInfo station={journey.arrivalStation} trainNumber={journey.legs?.at(-1)?.trainNumber ?? journey.trainNumber} direction="arrival" /> : null}</div></div><RoadConnectionStrip journey={journey} compact={compact} direction="from_station" />{journey.legs?.length ? <div className="ticket-connection">{journey.legs.map((leg, index) => <span key={`${leg.id}-${index}`}><b>Train {index + 1}: {leg.trainName}</b><small>#{leg.trainNumber} · {formatClock(leg.departureDateTime)} {leg.departureStation.code} → {formatClock(leg.arrivalDateTime)} {leg.arrivalStation.code}</small></span>)}</div> : null}<div className="ticket-meta"><span><b>{formatTravelDate(intent.preferredDate)}</b>Date</span><span><b>{journey.classOption.code}</b>{journey.classOption.name}</span><span><b>{intent.passengerCount}</b>Travellers</span><span><b>₹{journey.totalFare.toLocaleString('en-IN')}</b>{journey.roadLegs?.length ? 'Complete fare' : 'Train fare'}</span></div></article>;
 }
 
 function CheckoutSteps({ current }: { current: 'travellers' | 'payment' | 'confirmed' }) {
@@ -389,7 +412,7 @@ function Payment({ journey, intent, details, onBack, onPaid }: { journey: Journe
   const fee = intent.passengerCount * 59;
   const payable = journey.totalFare + fee;
   const pay = (event: React.FormEvent) => { event.preventDefault(); setProcessing(true); window.setTimeout(onPaid, 900); };
-  return <section className="payment-screen screen-shell"><CheckoutSteps current="payment" /><button className="back-link" type="button" onClick={onBack}><ArrowLeft size={15} /> Traveller details</button><div className="checkout-heading"><p className="screen-kicker">Secure checkout</p><h1>Complete your payment</h1><p>Review the fare and choose a payment method.</p></div><div className="payment-layout"><form className="payment-card" onSubmit={pay}><fieldset className="payment-methods"><legend>Payment method</legend><label className={method === 'upi' ? 'selected' : ''}><input type="radio" name="payment-method" value="upi" checked={method === 'upi'} onChange={() => setMethod('upi')} /><Smartphone size={20} /><span><strong>UPI</strong><small>Pay using any UPI app</small></span></label><label className={method === 'card' ? 'selected' : ''}><input type="radio" name="payment-method" value="card" checked={method === 'card'} onChange={() => setMethod('card')} /><CreditCard size={20} /><span><strong>Credit or debit card</strong><small>Visa, Mastercard and RuPay</small></span></label><label className={method === 'bank' ? 'selected' : ''}><input type="radio" name="payment-method" value="bank" checked={method === 'bank'} onChange={() => setMethod('bank')} /><Landmark size={20} /><span><strong>Net banking</strong><small>Choose your bank</small></span></label></fieldset><div className="payment-fields">{method === 'upi' ? <label>UPI ID<input name="upi-id" autoComplete="off" placeholder="name@bank" pattern="[^@\s]+@[^@\s]+" required /></label> : null}{method === 'card' ? <><label className="wide">Card number<input name="card-number" inputMode="numeric" autoComplete="cc-number" placeholder="4111 1111 1111 1111" minLength={12} required /></label><label>Name on card<input name="card-name" autoComplete="cc-name" placeholder="Cardholder name" required /></label><div className="card-pair"><label>Expiry<input name="card-expiry" inputMode="numeric" autoComplete="cc-exp" placeholder="MM/YY" required /></label><label>CVV<input name="card-cvv" type="password" inputMode="numeric" autoComplete="cc-csc" placeholder="•••" minLength={3} maxLength={4} required /></label></div></> : null}{method === 'bank' ? <label>Bank<select name="bank" defaultValue="" required><option value="" disabled>Select your bank</option><option>HDFC Bank</option><option>ICICI Bank</option><option>State Bank of India</option><option>Axis Bank</option><option>Kotak Mahindra Bank</option></select></label> : null}</div><p className="payment-safety"><LockKeyhole size={15} /> Test checkout only. No payment information is stored or charged.</p><button className="primary-button pay-button" type="submit" disabled={processing}>{processing ? 'Processing…' : `Pay ₹${payable.toLocaleString('en-IN')}`} {!processing ? <ArrowRight size={18} /> : null}</button></form><aside className="fare-summary"><SelectedJourney journey={journey} intent={intent} compact /><div className="fare-lines"><h2>Fare summary</h2><span>Ticket fare <b>₹{journey.totalFare.toLocaleString('en-IN')}</b></span><span>Convenience fee <b>₹{fee.toLocaleString('en-IN')}</b></span><span className="fare-total">Total payable <b>₹{payable.toLocaleString('en-IN')}</b></span></div><p>Booking for {details.passengers.map((passenger) => passenger.name).filter(Boolean).join(', ')}.</p></aside></div></section>;
+  return <section className="payment-screen screen-shell"><CheckoutSteps current="payment" /><button className="back-link" type="button" onClick={onBack}><ArrowLeft size={15} /> Traveller details</button><div className="checkout-heading"><p className="screen-kicker">Secure checkout</p><h1>Complete your payment</h1><p>Review the fare and choose a payment method.</p></div><div className="payment-layout"><form className="payment-card" onSubmit={pay}><fieldset className="payment-methods"><legend>Payment method</legend><label className={method === 'upi' ? 'selected' : ''}><input type="radio" name="payment-method" value="upi" checked={method === 'upi'} onChange={() => setMethod('upi')} /><Smartphone size={20} /><span><strong>UPI</strong><small>Pay using any UPI app</small></span></label><label className={method === 'card' ? 'selected' : ''}><input type="radio" name="payment-method" value="card" checked={method === 'card'} onChange={() => setMethod('card')} /><CreditCard size={20} /><span><strong>Credit or debit card</strong><small>Visa, Mastercard and RuPay</small></span></label><label className={method === 'bank' ? 'selected' : ''}><input type="radio" name="payment-method" value="bank" checked={method === 'bank'} onChange={() => setMethod('bank')} /><Landmark size={20} /><span><strong>Net banking</strong><small>Choose your bank</small></span></label></fieldset><div className="payment-fields">{method === 'upi' ? <label>UPI ID<input name="upi-id" autoComplete="off" placeholder="name@bank" pattern="[^@\s]+@[^@\s]+" required /></label> : null}{method === 'card' ? <><label className="wide">Card number<input name="card-number" inputMode="numeric" autoComplete="cc-number" placeholder="4111 1111 1111 1111" minLength={12} required /></label><label>Name on card<input name="card-name" autoComplete="cc-name" placeholder="Cardholder name" required /></label><div className="card-pair"><label>Expiry<input name="card-expiry" inputMode="numeric" autoComplete="cc-exp" placeholder="MM/YY" required /></label><label>CVV<input name="card-cvv" type="password" inputMode="numeric" autoComplete="cc-csc" placeholder="•••" minLength={3} maxLength={4} required /></label></div></> : null}{method === 'bank' ? <label>Bank<select name="bank" defaultValue="" required><option value="" disabled>Select your bank</option><option>HDFC Bank</option><option>ICICI Bank</option><option>State Bank of India</option><option>Axis Bank</option><option>Kotak Mahindra Bank</option></select></label> : null}</div><p className="payment-safety"><LockKeyhole size={15} /> Test checkout only. No payment information is stored or charged.</p><button className="primary-button pay-button" type="submit" disabled={processing}>{processing ? 'Processing…' : `Pay ₹${payable.toLocaleString('en-IN')}`} {!processing ? <ArrowRight size={18} /> : null}</button></form><aside className="fare-summary"><SelectedJourney journey={journey} intent={intent} compact /><div className="fare-lines"><h2>Fare summary</h2><span>{journey.roadLegs?.length ? 'Journey fare' : 'Train fare'} <b>₹{journey.totalFare.toLocaleString('en-IN')}</b></span><span>Convenience fee <b>₹{fee.toLocaleString('en-IN')}</b></span><span className="fare-total">Total payable <b>₹{payable.toLocaleString('en-IN')}</b></span></div><p>Booking for {details.passengers.map((passenger) => passenger.name).filter(Boolean).join(', ')}.</p></aside></div></section>;
 }
 
 function Confirmation({ journey, intent, details, onHome }: { journey: JourneyOption; intent: JourneyIntent; details: BookingDetails; onHome: () => void }) {

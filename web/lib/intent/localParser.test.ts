@@ -15,4 +15,9 @@ describe('LocalIntentParser', () => {
     const intent = new LocalIntentParser().parse('Kolkata to Kochi for 2 passengers');
     expect(intent).toMatchObject({ originCity: 'Kolkata', destinationCity: 'Kochi', passengerCount: 2 });
   });
+
+  it('recognises a town and an optional bus connection', () => {
+    const intent = new LocalIntentParser().parse('Khategaon to Jaipur with a bus to the station');
+    expect(intent).toMatchObject({ originCity: 'Khategaon', destinationCity: 'Jaipur', journeyMode: 'complete' });
+  });
 });

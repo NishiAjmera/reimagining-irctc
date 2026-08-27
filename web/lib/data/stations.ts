@@ -22,11 +22,12 @@ export const stations: Record<string, Station> = {
   ERS: { code: 'ERS', name: 'Ernakulam Junction', city: 'Kochi', distanceFromCityCentreKm: 6 },
   BBS: { code: 'BBS', name: 'Bhubaneswar', city: 'Bhubaneswar', distanceFromCityCentreKm: 4 },
   CDG: { code: 'CDG', name: 'Chandigarh Junction', city: 'Chandigarh', distanceFromCityCentreKm: 8 },
+  HD: { code: 'HD', name: 'Harda', city: 'Harda', distanceFromCityCentreKm: 2 },
 };
 
 export const cityNames = [
   'Ahmedabad', 'Bengaluru', 'Bhopal', 'Bhubaneswar', 'Chandigarh', 'Chennai', 'Delhi', 'Hyderabad',
-  'Indore', 'Jaipur', 'Kochi', 'Kolkata', 'Lucknow', 'Mumbai', 'Patna', 'Pune',
+  'Harda', 'Indore', 'Jaipur', 'Kochi', 'Kolkata', 'Lucknow', 'Mumbai', 'Patna', 'Pune',
 ];
 
 export const primaryStationByCity = Object.fromEntries(

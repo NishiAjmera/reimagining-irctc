@@ -1,6 +1,7 @@
 export type RankingPriority = 'best' | 'confirmation' | 'price' | 'duration' | 'arrival';
 export type AvailabilityStatus = 'CONFIRMED' | 'RAC' | 'WAITLIST';
 export type RecommendationType = 'BEST_OVERALL' | 'CHEAPEST' | 'BEST_AVAILABILITY' | 'FASTEST' | 'ALTERNATIVE_DATE';
+export type JourneyMode = 'train_only' | 'complete';
 
 export type Station = {
   code: string;
@@ -12,6 +13,9 @@ export type Station = {
 export type JourneyIntent = {
   originCity: string;
   destinationCity: string;
+  originRailCity?: string;
+  destinationRailCity?: string;
+  journeyMode?: JourneyMode;
   preferredDate: string;
   flexibilityDays: number;
   arrivalBefore?: string;
@@ -81,6 +85,26 @@ export type JourneyOption = {
     station: Station;
     durationMinutes: number;
   };
+  roadLegs?: RoadLeg[];
+  doorToDoorDurationMinutes?: number;
+};
+
+export type RoadLeg = {
+  id: string;
+  mode: 'BUS';
+  operator: string;
+  serviceNumber: string;
+  coachType: string;
+  originName: string;
+  destinationName: string;
+  departureDateTime: string;
+  arrivalDateTime: string;
+  durationMinutes: number;
+  distanceKm: number;
+  farePerTraveller: number;
+  availableSeats: number;
+  transferBufferMinutes: number;
+  direction: 'to_station' | 'from_station';
 };
 
 export type JourneyClassChoice = {

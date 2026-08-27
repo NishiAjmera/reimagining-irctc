@@ -1,5 +1,5 @@
 import { fetchRailRadarServices } from '@/lib/data/railRadar';
-import { createIndirectJourneyOptions, rankJourneys, rankJourneyServices } from '@/lib/ranking/rankJourneys';
+import { addRoadConnections, createIndirectJourneyOptions, rankJourneys, rankJourneyServices, resolveRailIntent } from '@/lib/ranking/rankJourneys';
 import type { JourneyIntent } from '@/types/journey';
 
 export async function POST(request: Request) {
@@ -8,9 +8,10 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Origin, destination and date are required.' }, { status: 400 });
   }
 
-  const liveServices = await fetchRailRadarServices(intent);
+  const railIntent = resolveRailIntent(intent);
+  const liveServices = await fetchRailRadarServices(railIntent);
   return Response.json({
-    outcome: liveServices ? { ...rankJourneyServices(intent, liveServices), indirectOptions: createIndirectJourneyOptions(intent) } : rankJourneys(intent),
+    outcome: liveServices ? addRoadConnections(intent, { ...rankJourneyServices(railIntent, liveServices), indirectOptions: createIndirectJourneyOptions(railIntent) }) : rankJourneys(intent),
     source: liveServices ? 'railradar' : 'sample',
   });
 }

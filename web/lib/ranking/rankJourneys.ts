@@ -1,17 +1,80 @@
 import { createSampleServices, trains } from '@/lib/data/trains';
-import type { AvailabilityStatus, ClassAvailability, JourneyClassChoice, JourneyIntent, JourneyLeg, JourneyOption, ScoreBreakdown, SearchOutcome, TrainService } from '@/types/journey';
+import { getTravelLocation, railConnectionsFor, resolveRailCity } from '@/lib/data/locations';
+import type { AvailabilityStatus, ClassAvailability, JourneyClassChoice, JourneyIntent, JourneyLeg, JourneyOption, RoadLeg, ScoreBreakdown, SearchOutcome, TrainService } from '@/types/journey';
 import { scoreJourney, withRecommendation } from './scoreJourney';
 
 const byScore = (a: JourneyOption, b: JourneyOption) => b.score - a.score;
 
 export function rankJourneys(intent: JourneyIntent): SearchOutcome {
+  const railIntent = resolveRailIntent(intent);
   const stored = trains.filter((train) =>
-    train.departureStation.city.toLowerCase() === intent.originCity.toLowerCase() &&
-    train.arrivalStation.city.toLowerCase() === intent.destinationCity.toLowerCase(),
+    train.departureStation.city.toLowerCase() === railIntent.originCity.toLowerCase() &&
+    train.arrivalStation.city.toLowerCase() === railIntent.destinationCity.toLowerCase(),
   );
-  const generated = createSampleServices(intent.originCity, intent.destinationCity);
+  const generated = createSampleServices(railIntent.originCity, railIntent.destinationCity);
   const services = stored.length >= 2 ? stored : [...stored, ...generated];
-  return { ...rankJourneyServices(intent, services), indirectOptions: createIndirectJourneyOptions(intent) };
+  const outcome = { ...rankJourneyServices(railIntent, services), indirectOptions: createIndirectJourneyOptions(railIntent) };
+  return addRoadConnections(intent, outcome);
+}
+
+export function resolveRailIntent(intent: JourneyIntent): JourneyIntent {
+  return {
+    ...intent,
+    originCity: resolveRailCity(intent.originCity, intent.originRailCity),
+    destinationCity: resolveRailCity(intent.destinationCity, intent.destinationRailCity),
+  };
+}
+
+export function addRoadConnections(intent: JourneyIntent, outcome: SearchOutcome): SearchOutcome {
+  if (intent.journeyMode !== 'complete') return outcome;
+  const apply = (option: JourneyOption) => attachRoadLegs(intent, option);
+  return { ...outcome, options: outcome.options.map(apply), otherOptions: outcome.otherOptions.map(apply), indirectOptions: outcome.indirectOptions.map(apply) };
+}
+
+function attachRoadLegs(intent: JourneyIntent, option: JourneyOption): JourneyOption {
+  const roadLegs: RoadLeg[] = [];
+  const originConnection = selectedRoadConnection(intent.originCity, intent.originRailCity);
+  const destinationConnection = selectedRoadConnection(intent.destinationCity, intent.destinationRailCity);
+  if (originConnection) roadLegs.push(createRoadLeg(intent.originCity, option.departureStation.name, option.departureDateTime, originConnection, 'to_station'));
+  if (destinationConnection) roadLegs.push(createRoadLeg(intent.destinationCity, option.arrivalStation.name, option.arrivalDateTime, destinationConnection, 'from_station'));
+  if (!roadLegs.length) return option;
+  const roadFare = roadLegs.reduce((total, leg) => total + leg.farePerTraveller * intent.passengerCount, 0);
+  const firstDeparture = roadLegs.find((leg) => leg.direction === 'to_station')?.departureDateTime ?? option.departureDateTime;
+  const finalArrival = roadLegs.find((leg) => leg.direction === 'from_station')?.arrivalDateTime ?? option.arrivalDateTime;
+  const busTradeoff = 'Bus timings and availability should be reconfirmed before travel';
+  const classChoices = option.classChoices?.map((choice) => ({ ...choice, totalFare: choice.totalFare + roadFare, reasons: [`Connects ${intent.originCity} to the rail journey`, ...choice.reasons], tradeoffs: [...choice.tradeoffs, busTradeoff] }));
+  return {
+    ...option,
+    totalFare: option.totalFare + roadFare,
+    classChoices,
+    roadLegs,
+    doorToDoorDurationMinutes: Math.round((Date.parse(finalArrival) - Date.parse(firstDeparture)) / 60_000),
+    reasons: [`Connects ${intent.originCity} to the rail journey`, ...option.reasons],
+    tradeoffs: [...option.tradeoffs, busTradeoff],
+  };
+}
+
+function selectedRoadConnection(locationName: string, railCity?: string) {
+  if (getTravelLocation(locationName)?.kind !== 'town') return undefined;
+  const connections = railConnectionsFor(locationName);
+  return connections.find((connection) => connection.railCity === railCity) ?? connections[0];
+}
+
+function createRoadLeg(town: string, stationName: string, trainTime: string, connection: ReturnType<typeof selectedRoadConnection> & {}, direction: RoadLeg['direction']): RoadLeg {
+  const transferBufferMinutes = direction === 'to_station' ? 75 : 45;
+  const trainDate = Date.parse(trainTime);
+  const arrivalDateTime = direction === 'to_station' ? new Date(trainDate - transferBufferMinutes * 60_000) : new Date(trainDate + (transferBufferMinutes + connection.durationMinutes) * 60_000);
+  const departureDateTime = direction === 'to_station' ? new Date(arrivalDateTime.getTime() - connection.durationMinutes * 60_000) : new Date(trainDate + transferBufferMinutes * 60_000);
+  return {
+    id: `bus-${town}-${connection.railCity}-${direction}`,
+    mode: 'BUS', operator: connection.operator, serviceNumber: `RE-${connection.railCity.slice(0, 2).toUpperCase()}${connection.durationMinutes}`,
+    coachType: connection.coachType,
+    originName: direction === 'to_station' ? `${town} Bus Stand` : stationName,
+    destinationName: direction === 'to_station' ? stationName : `${town} Bus Stand`,
+    departureDateTime: departureDateTime.toISOString(), arrivalDateTime: arrivalDateTime.toISOString(),
+    durationMinutes: connection.durationMinutes, distanceKm: connection.distanceKm, farePerTraveller: connection.fare,
+    availableSeats: 18, transferBufferMinutes, direction,
+  };
 }
 
 export function rankJourneyServices(intent: JourneyIntent, services: TrainService[]): SearchOutcome {

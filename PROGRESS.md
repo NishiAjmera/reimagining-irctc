@@ -49,6 +49,7 @@ Last updated: 26 August 2026
 - [x] Add passenger and booking-contact details after journey selection
 - [x] Add a realistic simulated payment step with UPI, card, and net-banking choices
 - [x] Add a complete booking confirmation state and sample booking reference
+- [x] Show lower-ranked and waitlisted alternatives as full selectable journey cards
 
 ## Current focus
 

@@ -21,6 +21,7 @@ RailEase optimises for **time to confident choice**. AI is embedded as an intent
 - Local intent extraction with editable constraints
 - Nearby-date, nearby-station, class, availability, timing, comfort, and fare consideration
 - Three ranked recommendation cards with reasons and explicit trade-offs
+- Full, selectable detail cards for lower-ranked and waitlisted alternatives
 - Plain-language explanations for railway classes, RAC, and waitlist
 - Contextual questions tied to the selected journey
 - Responsive traveller details, fare review, simulated payment, and booking confirmation flow

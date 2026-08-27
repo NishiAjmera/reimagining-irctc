@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, ArrowRight, CalendarDays, Check, GripVertical, Languages, LockKeyhole, MapPin, Menu, PanelLeftClose, Search, Send, ShieldCheck, TrainFront, UserRound, Users, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, CreditCard, GripVertical, Languages, Landmark, LockKeyhole, MapPin, Menu, PanelLeftClose, Search, Send, ShieldCheck, Smartphone, TicketCheck, TrainFront, UserRound, Users, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { track } from '@/lib/analytics';
 import { cityNames } from '@/lib/data/stations';
@@ -13,9 +13,11 @@ import { ContextQuestions } from './ContextQuestions';
 import { JourneyCard } from './JourneyCard';
 import { PriorityPanel } from './PriorityPanel';
 
-type Stage = 'home' | 'chat' | 'constraints' | 'searching' | 'results' | 'booking' | 'handoff';
+type Stage = 'home' | 'chat' | 'constraints' | 'searching' | 'results' | 'booking' | 'payment' | 'confirmed';
 type SearchMode = 'describe' | 'structured';
 type DataSource = 'sample' | 'railradar';
+type PassengerDetails = { name: string; age: string; gender: string; berth: string };
+type BookingDetails = { passengers: PassengerDetails[]; email: string; phone: string };
 
 const ACCESS_DIGESTS = {
   email: '52d650d5ee686b8a810429e5ef84cc994c011659eb6018e37ec15962b4d260ca',
@@ -36,6 +38,7 @@ export function JourneyPlanner() {
   const [outcome, setOutcome] = useState<SearchOutcome | null>(null);
   const [dataSource, setDataSource] = useState<DataSource>('sample');
   const [selected, setSelected] = useState<JourneyOption | null>(null);
+  const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>(null);
   const [bookingOrigin, setBookingOrigin] = useState<'chat' | 'results'>('results');
   const [error, setError] = useState('');
   const [mobileNav, setMobileNav] = useState(false);
@@ -79,13 +82,15 @@ export function JourneyPlanner() {
 
   const choose = (journey: JourneyOption) => {
     setBookingOrigin(stage === 'chat' ? 'chat' : 'results');
-    setSelected(journey); setStage('booking');
+    setSelected(journey);
+    setBookingDetails(createBookingDetails(intent?.passengerCount ?? 1));
+    setStage('booking');
     track('journey_selected', { journeyId: journey.id, timeToSelectionMs: resultsAt.current ? Date.now() - resultsAt.current : undefined });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const tryDemo = () => { setMode('describe'); setQuery(DEMO_PROMPT); setError(''); document.getElementById('journey-query')?.focus(); };
-  const reset = () => { setStage('home'); setIntent(null); setOutcome(null); setSelected(null); setError(''); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const reset = () => { setStage('home'); setIntent(null); setOutcome(null); setSelected(null); setBookingDetails(null); setError(''); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
   return (
     <main className="min-h-screen bg-cream text-ink">
@@ -97,8 +102,9 @@ export function JourneyPlanner() {
       {stage === 'constraints' && intent ? <ConstraintPanel intent={intent} onChange={setIntent} onSearch={search} onBack={() => setStage('home')} /> : null}
       {stage === 'searching' && intent ? <Searching intent={intent} /> : null}
       {stage === 'results' && intent && outcome ? <Results intent={intent} outcome={outcome} dataSource={dataSource} onEdit={() => setStage('constraints')} onChoose={choose} onDemo={() => { setQuery(DEMO_PROMPT); setStage('home'); }} /> : null}
-      {stage === 'booking' && intent && selected ? <Booking intent={intent} journey={selected} onBack={() => setStage(bookingOrigin)} onHandoff={() => { setStage('handoff'); track('booking_handoff_clicked', { journeyId: selected.id }); }} /> : null}
-      {stage === 'handoff' && intent && selected ? <Handoff journey={selected} intent={intent} onChange={() => setStage(bookingOrigin)} onHome={reset} /> : null}
+      {stage === 'booking' && intent && selected && bookingDetails ? <Booking intent={intent} journey={selected} details={bookingDetails} onChange={setBookingDetails} onBack={() => setStage(bookingOrigin)} onContinue={() => { setStage('payment'); track('traveller_details_completed', { journeyId: selected.id }); window.scrollTo({ top: 0, behavior: 'smooth' }); }} /> : null}
+      {stage === 'payment' && intent && selected && bookingDetails ? <Payment intent={intent} journey={selected} details={bookingDetails} onBack={() => setStage('booking')} onPaid={() => { setStage('confirmed'); track('sample_payment_completed', { journeyId: selected.id }); window.scrollTo({ top: 0, behavior: 'smooth' }); }} /> : null}
+      {stage === 'confirmed' && intent && selected && bookingDetails ? <Confirmation journey={selected} intent={intent} details={bookingDetails} onHome={reset} /> : null}
       </> : null}
     </main>
   );
@@ -340,13 +346,48 @@ function Results({ intent, outcome, dataSource, onEdit, onChoose, onDemo }: { in
   return <section className="results-screen"><div className="results-header"><div><button type="button" className="back-link" onClick={onEdit}><ArrowLeft size={15} /> Edit</button><h1>{intent.originCity} <span>→</span> {intent.destinationCity}</h1></div><div className="journey-summary"><span><CalendarDays size={16} /> {formatTravelDate(intent.preferredDate)}</span><span><Users size={16} /> {intent.passengerCount} travellers</span>{intent.confirmedOnly ? <span><ShieldCheck size={16} /> Confirmed only</span> : null}</div></div><div className="results-layout"><div className="journey-list">{outcome.options.map((journey, index) => <JourneyCard key={journey.id} journey={journey} index={index} onChoose={onChoose} />)}{outcome.otherOptions.length ? <details className="other-options"><summary>Other options <span>{outcome.otherOptions.length}</span></summary>{outcome.otherOptions.map((item) => <div key={item.id}><strong>{item.trainName} · {item.classOption.code}</strong><span>{item.tradeoffs[0] ?? 'Lower preference match'}</span></div>)}</details> : null}</div><PriorityPanel intent={intent} /></div><p className="data-note">{dataSource === 'railradar' ? 'Timetables use RailRadar data. Fares and seat status are illustrative.' : 'Sample timetables, fares and seat status.'}</p><ContextQuestions journey={outcome.options[0]} intent={intent} /></section>;
 }
 
-function Booking({ intent, journey, onBack, onHandoff }: { intent: JourneyIntent; journey: JourneyOption; onBack: () => void; onHandoff: () => void }) {
-  return <section className="booking-screen screen-shell"><button className="back-link" type="button" onClick={onBack}><ArrowLeft size={15} /> Back</button><div className="booking-success"><span><Check size={28} /></span><h1>{intent.originCity} <em>to</em> {intent.destinationCity}</h1></div><div className="booking-ticket"><div className="ticket-head"><span>Selected journey</span><strong>{journey.trainName}</strong><small>#{journey.trainNumber}</small></div><div className="ticket-route"><div><strong>{formatClock(journey.departureDateTime)}</strong><span>{journey.departureStation.code}</span><small>{journey.departureStation.name}</small></div><i /><TrainFront size={25} /><i /><div><strong>{formatClock(journey.arrivalDateTime)}</strong><span>{journey.arrivalStation.code}</span><small>{journey.arrivalStation.name}</small></div></div><div className="ticket-meta"><span><b>{formatTravelDate(intent.preferredDate)}</b>Date</span><span><b>{journey.classOption.code}</b>{journey.classOption.name}</span><span><b>{intent.passengerCount}</b>Travellers</span><span><b>₹{journey.totalFare.toLocaleString('en-IN')}</b>Total</span></div></div><div className="booking-why"><h2>Why it fits</h2>{journey.reasons.slice(0, 3).map((reason) => <span key={reason}><Check /> {reason}</span>)}</div><div className="booking-actions"><span /><button className="primary-button" type="button" onClick={onHandoff}>Continue <ArrowRight size={18} /></button></div></section>;
+function Booking({ intent, journey, details, onChange, onBack, onContinue }: { intent: JourneyIntent; journey: JourneyOption; details: BookingDetails; onChange: (details: BookingDetails) => void; onBack: () => void; onContinue: () => void }) {
+  const updatePassenger = (index: number, key: keyof PassengerDetails, value: string) => onChange({ ...details, passengers: details.passengers.map((passenger, passengerIndex) => passengerIndex === index ? { ...passenger, [key]: value } : passenger) });
+  return <section className="booking-screen screen-shell">
+    <CheckoutSteps current="travellers" />
+    <button className="back-link" type="button" onClick={onBack}><ArrowLeft size={15} /> Change journey</button>
+    <div className="checkout-heading"><p className="screen-kicker">Review & book</p><h1>{intent.originCity} to {intent.destinationCity}</h1><p>Confirm the train and add traveller details.</p></div>
+    <SelectedJourney journey={journey} intent={intent} />
+    <form className="traveller-form" onSubmit={(event) => { event.preventDefault(); onContinue(); }}>
+      <div className="form-section-heading"><div><p className="section-label">Travellers</p><h2>Passenger details</h2></div><span>{intent.passengerCount} {intent.passengerCount === 1 ? 'traveller' : 'travellers'}</span></div>
+      <div className="passenger-list">{details.passengers.map((passenger, index) => <fieldset className="passenger-card" key={index}><legend>Traveller {index + 1}{index === 0 ? <span>Primary</span> : null}</legend><div className="passenger-grid"><label>Full name<input name={`passenger-${index + 1}-name`} autoComplete={index === 0 ? 'name' : 'off'} value={passenger.name} onChange={(event) => updatePassenger(index, 'name', event.target.value)} placeholder="Name as on ID" required /></label><label>Age<input name={`passenger-${index + 1}-age`} type="number" inputMode="numeric" min="1" max="120" value={passenger.age} onChange={(event) => updatePassenger(index, 'age', event.target.value)} placeholder="Age" required /></label><label>Gender<select name={`passenger-${index + 1}-gender`} value={passenger.gender} onChange={(event) => updatePassenger(index, 'gender', event.target.value)} required><option value="">Select</option><option>Female</option><option>Male</option><option>Non-binary</option><option>Prefer not to say</option></select></label><label>Berth preference<select name={`passenger-${index + 1}-berth`} value={passenger.berth} onChange={(event) => updatePassenger(index, 'berth', event.target.value)}><option value="No preference">No preference</option><option>Lower</option><option>Middle</option><option>Upper</option><option>Side lower</option><option>Side upper</option></select></label></div></fieldset>)}</div>
+      <div className="contact-card"><div><p className="section-label">Booking updates</p><h2>Contact details</h2><p>Tickets and journey alerts will be sent here.</p></div><div className="contact-grid"><label>Email<input name="email" type="email" autoComplete="email" value={details.email} onChange={(event) => onChange({ ...details, email: event.target.value })} placeholder="you@example.com" required /></label><label>Mobile number<input name="phone" type="tel" inputMode="tel" autoComplete="tel" value={details.phone} onChange={(event) => onChange({ ...details, phone: event.target.value })} placeholder="10-digit mobile number" pattern="[0-9]{10}" required /></label></div></div>
+      <div className="booking-actions"><p><ShieldCheck size={15} /> Your details stay on this device.</p><button className="primary-button" type="submit">Continue to payment <ArrowRight size={18} /></button></div>
+    </form>
+  </section>;
 }
 
-function Handoff({ journey, intent, onChange, onHome }: { journey: JourneyOption; intent: JourneyIntent; onChange: () => void; onHome: () => void }) {
-  return <section className="handoff-screen screen-shell"><div className="handoff-icon"><Check size={38} /></div><h1>Journey selected.</h1><p>Reservation is unavailable in this preview.</p><div className="handoff-summary"><TrainFront size={24} /><div><strong>{journey.trainName}</strong><span>{intent.originCity} → {intent.destinationCity} · {journey.classOption.code} · {intent.passengerCount} travellers</span></div><b>₹{journey.totalFare.toLocaleString('en-IN')}</b></div><div className="handoff-actions"><button className="secondary-button" type="button" onClick={onChange}>Change journey</button><button className="primary-button" type="button" onClick={onHome}>Plan another trip</button></div></section>;
+function SelectedJourney({ journey, intent, compact = false }: { journey: JourneyOption; intent: JourneyIntent; compact?: boolean }) {
+  return <article className={`booking-ticket ${compact ? 'compact' : ''}`}><div className="ticket-head"><span>Selected journey</span><strong>{journey.trainName}</strong><small>#{journey.trainNumber}</small></div><div className="ticket-route"><div><strong>{formatClock(journey.departureDateTime)}</strong><span>{formatDateTime(journey.departureDateTime)}</span><b>{journey.departureStation.code}</b><small>{journey.departureStation.name}</small></div><div className="ticket-duration"><span><Clock3 size={14} /> {formatDuration(journey.durationMinutes)}</span><i /><em>{journey.tags.includes('overnight') ? 'Overnight' : 'Day journey'}</em></div><div><strong>{formatClock(journey.arrivalDateTime)}</strong><span>{formatDateTime(journey.arrivalDateTime)}</span><b>{journey.arrivalStation.code}</b><small>{journey.arrivalStation.name}</small></div></div><div className="ticket-meta"><span><b>{formatTravelDate(intent.preferredDate)}</b>Date</span><span><b>{journey.classOption.code}</b>{journey.classOption.name}</span><span><b>{intent.passengerCount}</b>Travellers</span><span><b>₹{journey.totalFare.toLocaleString('en-IN')}</b>Base fare</span></div></article>;
 }
+
+function CheckoutSteps({ current }: { current: 'travellers' | 'payment' | 'confirmed' }) {
+  const active = current === 'travellers' ? 1 : current === 'payment' ? 2 : 3;
+  return <ol className="checkout-steps" aria-label="Booking progress"><li className={active >= 1 ? 'active' : ''}><span>{active > 1 ? <Check size={13} /> : '1'}</span>Travellers</li><li className={active >= 2 ? 'active' : ''}><span>{active > 2 ? <Check size={13} /> : '2'}</span>Payment</li><li className={active >= 3 ? 'active' : ''}><span>3</span>Confirmation</li></ol>;
+}
+
+function Payment({ journey, intent, details, onBack, onPaid }: { journey: JourneyOption; intent: JourneyIntent; details: BookingDetails; onBack: () => void; onPaid: () => void }) {
+  const [method, setMethod] = useState<'upi' | 'card' | 'bank'>('upi');
+  const [processing, setProcessing] = useState(false);
+  const fee = intent.passengerCount * 59;
+  const payable = journey.totalFare + fee;
+  const pay = (event: React.FormEvent) => { event.preventDefault(); setProcessing(true); window.setTimeout(onPaid, 900); };
+  return <section className="payment-screen screen-shell"><CheckoutSteps current="payment" /><button className="back-link" type="button" onClick={onBack}><ArrowLeft size={15} /> Traveller details</button><div className="checkout-heading"><p className="screen-kicker">Secure checkout</p><h1>Complete your payment</h1><p>Review the fare and choose a payment method.</p></div><div className="payment-layout"><form className="payment-card" onSubmit={pay}><fieldset className="payment-methods"><legend>Payment method</legend><label className={method === 'upi' ? 'selected' : ''}><input type="radio" name="payment-method" value="upi" checked={method === 'upi'} onChange={() => setMethod('upi')} /><Smartphone size={20} /><span><strong>UPI</strong><small>Pay using any UPI app</small></span></label><label className={method === 'card' ? 'selected' : ''}><input type="radio" name="payment-method" value="card" checked={method === 'card'} onChange={() => setMethod('card')} /><CreditCard size={20} /><span><strong>Credit or debit card</strong><small>Visa, Mastercard and RuPay</small></span></label><label className={method === 'bank' ? 'selected' : ''}><input type="radio" name="payment-method" value="bank" checked={method === 'bank'} onChange={() => setMethod('bank')} /><Landmark size={20} /><span><strong>Net banking</strong><small>Choose your bank</small></span></label></fieldset><div className="payment-fields">{method === 'upi' ? <label>UPI ID<input name="upi-id" autoComplete="off" placeholder="name@bank" pattern="[^@\s]+@[^@\s]+" required /></label> : null}{method === 'card' ? <><label className="wide">Card number<input name="card-number" inputMode="numeric" autoComplete="cc-number" placeholder="4111 1111 1111 1111" minLength={12} required /></label><label>Name on card<input name="card-name" autoComplete="cc-name" placeholder="Cardholder name" required /></label><div className="card-pair"><label>Expiry<input name="card-expiry" inputMode="numeric" autoComplete="cc-exp" placeholder="MM/YY" required /></label><label>CVV<input name="card-cvv" type="password" inputMode="numeric" autoComplete="cc-csc" placeholder="•••" minLength={3} maxLength={4} required /></label></div></> : null}{method === 'bank' ? <label>Bank<select name="bank" defaultValue="" required><option value="" disabled>Select your bank</option><option>HDFC Bank</option><option>ICICI Bank</option><option>State Bank of India</option><option>Axis Bank</option><option>Kotak Mahindra Bank</option></select></label> : null}</div><p className="payment-safety"><LockKeyhole size={15} /> Test checkout only. No payment information is stored or charged.</p><button className="primary-button pay-button" type="submit" disabled={processing}>{processing ? 'Processing…' : `Pay ₹${payable.toLocaleString('en-IN')}`} {!processing ? <ArrowRight size={18} /> : null}</button></form><aside className="fare-summary"><SelectedJourney journey={journey} intent={intent} compact /><div className="fare-lines"><h2>Fare summary</h2><span>Ticket fare <b>₹{journey.totalFare.toLocaleString('en-IN')}</b></span><span>Convenience fee <b>₹{fee.toLocaleString('en-IN')}</b></span><span className="fare-total">Total payable <b>₹{payable.toLocaleString('en-IN')}</b></span></div><p>Booking for {details.passengers.map((passenger) => passenger.name).filter(Boolean).join(', ')}.</p></aside></div></section>;
+}
+
+function Confirmation({ journey, intent, details, onHome }: { journey: JourneyOption; intent: JourneyIntent; details: BookingDetails; onHome: () => void }) {
+  const reference = `RE${journey.trainNumber.slice(-4)}${intent.passengerCount}X`;
+  return <section className="confirmation-screen screen-shell"><CheckoutSteps current="confirmed" /><div className="confirmation-mark"><TicketCheck size={36} /></div><p className="screen-kicker">Booking confirmed</p><h1>Your journey is booked.</h1><p>Trip details have been sent to {details.email}.</p><div className="confirmation-reference"><span>Booking reference</span><strong>{reference}</strong><small>Sample reference · no payment was charged</small></div><SelectedJourney journey={journey} intent={intent} /><div className="confirmation-actions"><button className="primary-button" type="button" onClick={onHome}>Plan another journey</button></div></section>;
+}
+
+const createBookingDetails = (count: number): BookingDetails => ({ passengers: Array.from({ length: count }, () => ({ name: '', age: '', gender: '', berth: 'No preference' })), email: '', phone: '' });
 
 const formatClock = (iso: string) => new Intl.DateTimeFormat('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }).format(new Date(iso));
+const formatDateTime = (iso: string) => new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' }).format(new Date(iso));
 const formatTravelDate = (date: string) => new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${date}T00:00:00Z`));
+const formatDuration = (minutes: number) => `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, '0')}m`;

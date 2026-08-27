@@ -1,4 +1,4 @@
-type AnalyticsEvent = 'journey_started' | 'intent_submitted' | 'constraints_edited' | 'results_viewed' | 'journey_selected' | 'recommendation_explanation_opened' | 'railway_term_explained' | 'context_question_clicked' | 'booking_handoff_clicked';
+type AnalyticsEvent = 'journey_started' | 'intent_submitted' | 'constraints_edited' | 'results_viewed' | 'journey_selected' | 'recommendation_explanation_opened' | 'railway_term_explained' | 'context_question_clicked' | 'traveller_details_completed' | 'sample_payment_completed';
 
 export function track(event: AnalyticsEvent, data: Record<string, unknown> = {}) {
   if (typeof window === 'undefined') return;

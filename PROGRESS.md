@@ -45,6 +45,10 @@ Last updated: 26 August 2026
 - [x] Add mouse, touch, and keyboard-accessible chat-width resizing
 - [x] Refine the chat workspace with a compact header, rail-icon reopen control, scroll fade, and borderless panel separation
 - [x] Replace the open-state divider with an inset conversation card and spacious visual gutter
+- [x] Expand the selected-journey card with dates, duration, and overnight context
+- [x] Add passenger and booking-contact details after journey selection
+- [x] Add a realistic simulated payment step with UPI, card, and net-banking choices
+- [x] Add a complete booking confirmation state and sample booking reference
 
 ## Current focus
 
@@ -58,7 +62,7 @@ The refreshed product is live with public-link access at [railease-journey-plann
 - The confirmed Thursday alternative is surfaced.
 - Senior-traveller comfort receives a ranking bonus.
 - Routes without direct matches return practical alternatives.
-- The 90-second hero journey was completed through prototype booking handoff.
+- The primary journey completes traveller details, payment review, and sample booking confirmation.
 - Traditional Indore → Delhi search reaches the priority-selection step.
 - Product sign-in rejects invalid credentials and opens the planner with the private access pair.
 - The refreshed interface completes the Bengaluru → Jaipur results flow with concise copy.
@@ -67,6 +71,7 @@ The refreshed product is live with public-link access at [railease-journey-plann
 - Complete requests move directly to confirmation; incomplete requests collect only the missing essentials.
 - Conversation and results stack vertically on narrower screens without changing the manual search path.
 - The chat panel can be resized on desktop, collapsed to prioritise results, and reopened without losing the conversation.
+- Choosing a journey now continues through traveller details, payment review, and confirmation without processing a real charge.
 
 ## Decisions
 

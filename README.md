@@ -23,7 +23,7 @@ RailEase optimises for **time to confident choice**. AI is embedded as an intent
 - Three ranked recommendation cards with reasons and explicit trade-offs
 - Plain-language explanations for railway classes, RAC, and waitlist
 - Contextual questions tied to the selected journey
-- Responsive booking summary and safe reservation handoff
+- Responsive traveller details, fare review, simulated payment, and booking confirmation flow
 - Client-side product analytics for time to results and time to selection
 - Useful alternatives instead of a blank no-results state
 - Date-aligned sample results across 16 major Indian cities
@@ -38,7 +38,7 @@ The application lives in [`web/`](./web) and uses Next.js App Router, React, Typ
 ```text
 web/
 ├── app/                    # Application shell, metadata, and visual system
-├── components/journey/     # Search, constraints, results, Q&A, and handoff UI
+├── components/journey/     # Search, constraints, results, Q&A, and checkout UI
 ├── components/railway/     # Reusable accessible terminology explanations
 ├── lib/data/               # Stations and simulated train availability
 ├── lib/intent/             # Parser interface and local heuristic parser
@@ -101,11 +101,11 @@ Use **Use example** or paste:
 
 > I need to travel from Bengaluru to Jaipur next Friday for a wedding. I need to reach by 4 PM. We’re three people including my mother, and I don’t want a waitlisted ticket.
 
-The app extracts the constraints, recommends a confirmed 3A overnight journey, explains the confirmed Sleeper budget trade-off, surfaces a Thursday availability alternative, answers “What does RAC mean?”, and completes a mocked booking handoff.
+The app extracts the constraints, recommends a confirmed 3A overnight journey, explains the confirmed Sleeper budget trade-off, surfaces a Thursday availability alternative, answers “What does RAC mean?”, and continues through traveller details, payment review, and a simulated booking confirmation.
 
 ## What is mocked
 
-Without a configured provider key, train schedules, fares, availability, confirmation confidence, station distance, and booking handoff are local sample data. With RailRadar enabled, timetable details come from that provider while fares and availability remain illustrative. RailEase does not connect to IRCTC, collect passenger details, process payments, or guarantee future availability.
+Without a configured provider key, train schedules, fares, availability, confirmation confidence, station distance, and booking confirmation are local sample data. With RailRadar enabled, timetable details come from that provider while fares and availability remain illustrative. Traveller and payment fields remain in local interface state only; RailEase does not connect to IRCTC, transmit booking details, process payments, or guarantee future availability.
 
 ## Future integrations
 

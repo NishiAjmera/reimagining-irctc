@@ -51,6 +51,7 @@ Last updated: 26 August 2026
 - [x] Add a complete booking confirmation state and sample booking reference
 - [x] Show lower-ranked and waitlisted alternatives as full selectable journey cards
 - [x] Label waitlisted alternatives explicitly instead of reusing recommendation badges
+- [x] Add contextual chat help to the manual journey-details review page
 
 ## Current focus
 

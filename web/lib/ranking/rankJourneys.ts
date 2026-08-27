@@ -1,5 +1,5 @@
 import { createSampleServices, trains } from '@/lib/data/trains';
-import type { AvailabilityStatus, ClassAvailability, JourneyIntent, JourneyLeg, JourneyOption, ScoreBreakdown, SearchOutcome, TrainService } from '@/types/journey';
+import type { AvailabilityStatus, ClassAvailability, JourneyClassChoice, JourneyIntent, JourneyLeg, JourneyOption, ScoreBreakdown, SearchOutcome, TrainService } from '@/types/journey';
 import { scoreJourney, withRecommendation } from './scoreJourney';
 
 const byScore = (a: JourneyOption, b: JourneyOption) => b.score - a.score;
@@ -30,24 +30,29 @@ export function rankJourneyServices(intent: JourneyIntent, services: TrainServic
   const confirmed = exactDate.filter((option) => option.classOption.status === 'CONFIRMED');
   const best = (intent.confirmedOnly ? confirmed[0] : candidates[0]) ?? candidates[0];
   const cheapest = confirmed
-    .filter((option) => option.id !== best.id && option.scoreBreakdown.arrival > 0)
+    .filter((option) => trainKey(option) !== trainKey(best) && option.scoreBreakdown.arrival > 0)
     .sort((a, b) => a.classOption.fare - b.classOption.fare)[0];
   const alternative = candidates.filter((option) => localDate(option.departureDateTime) !== intent.preferredDate && option.classOption.status === 'CONFIRMED').sort(byScore)[0];
 
   const selected: JourneyOption[] = [];
-  if (best) selected.push(withRecommendation(best, 'BEST_OVERALL'));
-  if (cheapest) selected.push(withRecommendation(cheapest, 'CHEAPEST'));
-  if (alternative) selected.push(withRecommendation(alternative, 'ALTERNATIVE_DATE'));
+  if (best) addDistinct(selected, withRecommendation(best, 'BEST_OVERALL'));
+  if (cheapest) addDistinct(selected, withRecommendation(cheapest, 'CHEAPEST'));
+  if (alternative) addDistinct(selected, withRecommendation(alternative, 'ALTERNATIVE_DATE'));
   for (const candidate of candidates) {
     if (selected.length >= 3) break;
-    if (!selected.some((option) => option.id === candidate.id)) selected.push(withRecommendation(candidate, candidate.tags.includes('fastest') ? 'FASTEST' : 'BEST_AVAILABILITY'));
+    addDistinct(selected, withRecommendation(candidate, candidate.tags.includes('fastest') ? 'FASTEST' : 'BEST_AVAILABILITY'));
   }
 
-  const selectedIds = new Set(selected.map((option) => option.id));
-  const otherOptions = candidates.filter((option) => !selectedIds.has(option.id)).slice(0, 2);
+  const selectedTrains = new Set(selected.map(trainKey));
+  const otherOptions: JourneyOption[] = [];
+  for (const candidate of candidates) {
+    if (selectedTrains.has(trainKey(candidate)) || otherOptions.some((option) => trainKey(option) === trainKey(candidate))) continue;
+    otherOptions.push(candidate);
+    if (otherOptions.length === 2) break;
+  }
   return {
-    options: selected,
-    otherOptions,
+    options: selected.map((option) => attachClassChoices(option, candidates)),
+    otherOptions: otherOptions.map((option) => attachClassChoices(option, candidates)),
     indirectOptions: [],
     alternatives: confirmed.length === 0 ? ['Leave one day earlier for confirmed seats', 'Try a nearby station', 'Consider RAC with high confirmation confidence'] : [],
     considered: {
@@ -74,10 +79,47 @@ export function createIndirectJourneyOptions(intent: JourneyIntent): JourneyOpti
   const selected: JourneyOption[] = [];
   for (const option of candidates) {
     if (selected.some((item) => item.transfer?.station.city === option.transfer?.station.city)) continue;
-    selected.push(option);
+    selected.push(attachConnectionChoices(option, candidates));
     if (selected.length === 2) break;
   }
   return selected;
+}
+
+function addDistinct(options: JourneyOption[], candidate: JourneyOption) {
+  if (!options.some((option) => trainKey(option) === trainKey(candidate))) options.push(candidate);
+}
+
+function trainKey(option: JourneyOption) {
+  return `${option.trainNumber}-${option.departureStation.code}-${option.departureDateTime}`;
+}
+
+function attachClassChoices(option: JourneyOption, candidates: JourneyOption[]): JourneyOption {
+  const classChoices = candidates
+    .filter((candidate) => trainKey(candidate) === trainKey(option))
+    .sort((left, right) => classOrder(left.classOption.code) - classOrder(right.classOption.code))
+    .map(toClassChoice);
+  return { ...option, classChoices };
+}
+
+function attachConnectionChoices(option: JourneyOption, candidates: JourneyOption[]): JourneyOption {
+  const key = connectionKey(option);
+  const classChoices = candidates
+    .filter((candidate) => connectionKey(candidate) === key)
+    .sort((left, right) => classOrder(left.classOption.code) - classOrder(right.classOption.code))
+    .map(toClassChoice);
+  return { ...option, classChoices };
+}
+
+function connectionKey(option: JourneyOption) {
+  return option.legs?.map((leg) => leg.id).join('|') ?? option.id;
+}
+
+function toClassChoice(option: JourneyOption): JourneyClassChoice {
+  return { id: option.id, classOption: option.classOption, totalFare: option.totalFare, reasons: option.reasons, tradeoffs: option.tradeoffs, legs: option.legs };
+}
+
+function classOrder(code: string) {
+  return ['1A', '2A', '3A', '3E', 'CC', 'SL', '2S'].indexOf(code) + 1 || 99;
 }
 
 function createConnectionsVia(intent: JourneyIntent, interchangeCity: string): JourneyOption[] {

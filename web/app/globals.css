@@ -104,6 +104,40 @@ textarea::placeholder { color: #84909a; }
 .booking-why { border-radius: 10px; }
 .handoff-icon { box-shadow: none; }
 
+/* Train classes */
+.journey-metrics .class-picker { grid-column: 1 / -1; }
+.class-picker { min-width: 0; margin: 0; padding: 0; border: 0; }
+.class-picker legend { margin-bottom: 10px; color: #526673; font-size: 10px; font-weight: 760; text-transform: uppercase; letter-spacing: .08em; }
+.class-choice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 9px; }
+.class-choice-grid button { position: relative; min-width: 0; min-height: 102px; display: grid; grid-template-columns: 1fr auto; align-content: start; gap: 7px 10px; padding: 13px; border: 1px solid #d2d5d1; border-radius: 9px; background: #f7f5f0; color: var(--ink); text-align: left; cursor: pointer; transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms ease; }
+.class-choice-grid button:hover { border-color: #9fb3af; background: #f1f5f2; }
+.class-choice-grid button.selected { border-color: var(--teal); background: #edf5f2; box-shadow: inset 0 0 0 1px var(--teal); }
+.class-choice-grid button:focus-visible { outline: 3px solid #f1ad4d; outline-offset: 2px; }
+.class-picker .class-choice-name { min-width: 0; display: grid; gap: 2px; color: inherit; text-transform: none; letter-spacing: 0; }
+.class-picker .class-choice-name strong { font-size: 16px; }
+.class-picker .class-choice-name small { overflow: hidden; color: var(--muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.class-picker .class-choice-fare { justify-self: end; color: var(--ink); font-size: 13px; font-weight: 750; text-transform: none; letter-spacing: 0; }
+.class-picker .class-choice-status { grid-column: 1 / -1; display: flex; align-items: center; gap: 5px; color: #50636f; font-size: 9px; font-weight: 700; text-transform: none; letter-spacing: 0; }
+.class-picker .class-choice-status.confirmed { color: #08704c; }
+.class-picker .class-choice-status.rac { color: #986000; }
+.class-picker .class-choice-status.waitlist { color: #a3332a; }
+.class-choice-grid button em { position: absolute; right: 9px; bottom: 8px; color: var(--teal); font-size: 8px; font-style: normal; font-weight: 760; text-transform: uppercase; letter-spacing: .06em; }
+.selected-class-summary { display: grid; grid-template-columns: 1.2fr 1fr 1.2fr; gap: 1px; margin-top: 12px; border-radius: 8px; overflow: hidden; background: #dedfd9; }
+.selected-class-summary > span { min-width: 0; display: grid; gap: 3px; padding: 11px 13px; background: #f2f0ea; }
+.selected-class-summary small { color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .06em; }
+.selected-class-summary strong { font-size: 12px; }
+.indirect-class-picker { margin: 17px 20px 0; }
+.chat-launcher { width: 42px; height: 42px; border-radius: 12px; background: var(--ink); color: #fff; box-shadow: 0 8px 24px rgba(16,42,67,.18); }
+.station-inline-info { display: flex; align-items: center; gap: 5px; margin-top: 7px; color: inherit; text-transform: none; letter-spacing: 0; }
+.time-block.arrival .station-inline-info, .ticket-route > div:last-child .station-inline-info, .leg-time.arrival .station-inline-info { justify-content: flex-end; }
+.platform-pill { min-height: 23px; display: inline-flex; align-items: center; gap: 3px; padding: 0 7px; border-radius: 6px; background: #e6efec; color: #245d58; font-size: 9px; font-weight: 800; }
+.platform-pill small { color: #58716f; font-size: 7px; font-weight: 600; }
+.facility-icon { position: relative; width: 23px; height: 23px; display: inline-grid; place-items: center; border-radius: 6px; background: #e7f0ed; color: #08704c; }
+.facility-icon.unavailable { background: #eeece7; color: #9a9f9d; }
+.facility-icon.unavailable::after { content: ''; position: absolute; width: 16px; height: 1px; background: currentColor; transform: rotate(-42deg); }
+.indirect-leg .station-inline-info { margin-top: 4px; }
+.ticket-route .station-inline-info { margin-top: 8px; }
+
 /* One-change itineraries */
 .indirect-options { display: grid; gap: 14px; margin-top: 14px; padding-top: 26px; }
 .indirect-options-heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; }
@@ -520,4 +554,9 @@ input { font: inherit; color: var(--ink); }
   .constraint-footer > span { display: none; }
   .journey-card-body { padding: 18px 15px; }
   .data-note { text-align: left; }
+  .class-choice-grid { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(150px, 72%); overflow-x: auto; padding: 1px 1px 7px; scroll-snap-type: x proximity; }
+  .class-choice-grid button { scroll-snap-align: start; }
+  .selected-class-summary { grid-template-columns: 1fr 1fr; }
+  .selected-class-summary > span:last-child { grid-column: 1 / -1; }
+  .platform-pill small { display: none; }
 }

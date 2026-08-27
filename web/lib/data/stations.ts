@@ -32,3 +32,25 @@ export const cityNames = [
 export const primaryStationByCity = Object.fromEntries(
   cityNames.map((city) => [city, Object.values(stations).find((station) => station.city === city)]),
 ) as Record<string, Station | undefined>;
+
+export type StationAmenities = {
+  washrooms: boolean;
+  retiringRoom: boolean;
+  acWaitingRoom: boolean;
+};
+
+const limitedRetiringRooms = new Set(['GADJ', 'SMVB']);
+const limitedAcWaitingRooms = new Set(['GADJ', 'SMVB', 'ERS', 'CDG']);
+
+export const stationAmenitiesByCode = Object.fromEntries(
+  Object.keys(stations).map((code) => [code, {
+    washrooms: true,
+    retiringRoom: !limitedRetiringRooms.has(code),
+    acWaitingRoom: !limitedAcWaitingRooms.has(code),
+  }]),
+) as Record<string, StationAmenities>;
+
+export function expectedPlatform(trainNumber: string, stationCode: string, direction: 'arrival' | 'departure') {
+  const seed = [...`${trainNumber}-${stationCode}-${direction}`].reduce((total, character) => total + character.charCodeAt(0), 0);
+  return 1 + (seed % 8);
+}

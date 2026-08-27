@@ -56,4 +56,12 @@ describe('journey ranking', () => {
     expect(connection.arrivalStation.city).toBe('Jaipur');
     expect(connection.classOption.fare).toBe(connection.legs?.reduce((total, leg) => total + leg.classOption.fare, 0));
   });
+
+  it('groups available classes under one card per train', () => {
+    const outcome = rankJourneys(intent);
+    const trainNumbers = outcome.options.map((option) => option.trainNumber);
+    expect(new Set(trainNumbers).size).toBe(trainNumbers.length);
+    expect(outcome.options[0].classChoices?.map((choice) => choice.classOption.code)).toEqual(['2A', '3A', 'SL']);
+    expect(outcome.options[0].classChoices?.find((choice) => choice.classOption.code === '3A')?.id).toBe(outcome.options[0].id);
+  });
 });

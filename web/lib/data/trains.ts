@@ -10,7 +10,7 @@ export const trains: TrainService[] = [
     id: 'jaipur-superfast-fri', trainNumber: '12975', trainName: 'Jaipur Superfast Express',
     departureStation: stations.SBC, arrivalStation: stations.JP,
     departureDateTime: '2026-08-28T20:15:00+05:30', arrivalDateTime: '2026-08-29T13:20:00+05:30', durationMinutes: 1025,
-    classes: [cls('3A', 'AC 3 Tier', 2450, 'CONFIRMED', 97), cls('SL', 'Sleeper', 1600, 'CONFIRMED', 96)],
+    classes: [cls('2A', 'AC 2 Tier', 3180, 'RAC', 84, 3), cls('3A', 'AC 3 Tier', 2450, 'CONFIRMED', 97), cls('SL', 'Sleeper', 1600, 'CONFIRMED', 96)],
     trainTags: ['overnight', 'seniorFriendly'],
   },
   {
@@ -24,7 +24,7 @@ export const trains: TrainService[] = [
     id: 'aravali-thu', trainNumber: '19714', trainName: 'Aravali Express',
     departureStation: stations.SMVB, arrivalStation: stations.JP,
     departureDateTime: '2026-08-27T19:30:00+05:30', arrivalDateTime: '2026-08-28T10:50:00+05:30', durationMinutes: 920,
-    classes: [cls('3A', 'AC 3 Tier', 2150, 'CONFIRMED', 99), cls('SL', 'Sleeper', 1420, 'CONFIRMED', 99)],
+    classes: [cls('2A', 'AC 2 Tier', 2840, 'CONFIRMED', 96), cls('3A', 'AC 3 Tier', 2150, 'CONFIRMED', 99), cls('SL', 'Sleeper', 1420, 'CONFIRMED', 99)],
     trainTags: ['overnight', 'seniorFriendly'],
     searchDateOffset: -1,
   },
@@ -32,14 +32,14 @@ export const trains: TrainService[] = [
     id: 'jaipur-mail-late', trainNumber: '16532', trainName: 'Jaipur Mail',
     departureStation: stations.SBC, arrivalStation: stations.GADJ,
     departureDateTime: '2026-08-28T22:00:00+05:30', arrivalDateTime: '2026-08-29T17:30:00+05:30', durationMinutes: 1170,
-    classes: [cls('3A', 'AC 3 Tier', 2260, 'CONFIRMED', 95), cls('SL', 'Sleeper', 1490, 'CONFIRMED', 96)],
+    classes: [cls('2A', 'AC 2 Tier', 2960, 'RAC', 80, 6), cls('3A', 'AC 3 Tier', 2260, 'CONFIRMED', 95), cls('SL', 'Sleeper', 1490, 'CONFIRMED', 96)],
     trainTags: ['overnight', 'budget'],
   },
   {
     id: 'indore-intercity', trainNumber: '12415', trainName: 'Indore–New Delhi Intercity',
     departureStation: stations.INDB, arrivalStation: stations.NDLS,
     departureDateTime: '2026-08-29T16:35:00+05:30', arrivalDateTime: '2026-08-30T06:10:00+05:30', durationMinutes: 815,
-    classes: [cls('3A', 'AC 3 Tier', 1680, 'CONFIRMED', 94), cls('SL', 'Sleeper', 860, 'CONFIRMED', 97)],
+    classes: [cls('2A', 'AC 2 Tier', 2210, 'CONFIRMED', 90), cls('3A', 'AC 3 Tier', 1680, 'CONFIRMED', 94), cls('SL', 'Sleeper', 860, 'CONFIRMED', 97)],
     trainTags: ['overnight', 'budget'],
   },
   {
@@ -75,7 +75,7 @@ function route(id: string, trainNumber: string, trainName: string, from: string,
     departureDateTime,
     arrivalDateTime: new Date(new Date(departureDateTime).getTime() + durationMinutes * 60_000).toISOString(),
     durationMinutes,
-    classes: [cls('3A', 'AC 3 Tier', acFare, 'CONFIRMED', 91), cls('SL', 'Sleeper', Math.round(acFare * 0.58), 'RAC', 78, 6)],
+    classes: [cls('2A', 'AC 2 Tier', Math.round(acFare * 1.3), 'RAC', 82, 3), cls('3A', 'AC 3 Tier', acFare, 'CONFIRMED', 91), cls('SL', 'Sleeper', Math.round(acFare * 0.58), 'RAC', 78, 6)],
     trainTags,
   };
 }

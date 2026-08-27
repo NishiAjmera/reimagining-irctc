@@ -22,6 +22,7 @@ RailEase optimises for **time to confident choice**. AI is embedded as an intent
 - Local intent extraction with editable constraints
 - Nearby-date, nearby-station, class, availability, timing, comfort, and fare consideration
 - Three ranked recommendation cards with reasons and explicit trade-offs
+- One journey card per train with selectable Sleeper, 3A, 2A, and other available class options
 - Full, selectable detail cards for lower-ranked and waitlisted alternatives
 - Selectable one-change itineraries with interchange, transfer time, per-leg availability, and combined fare
 - Explicit waitlist-alternative labels and selection actions that preserve availability context
@@ -35,6 +36,8 @@ RailEase optimises for **time to confident choice**. AI is embedded as an intent
 - Split planning workspace with persistent chat and confirmed results on the right
 - Compact, collapsible chat presented as an inset card with adjustable width, scroll-edge text fading, and keyboard-accessible controls
 - Contextual journey-help chat on the manual details review page
+- Consistent rail-chat launchers across direct and indirect journey flows
+- Compact expected-platform and station-facility indicators beside each boarding and arrival station
 
 ## Architecture
 
@@ -65,7 +68,7 @@ RailEase currently covers Ahmedabad, Bengaluru, Bhopal, Bhubaneswar, Chandigarh,
 
 The conversational search smoothly expands after the first message, keeps the planning thread on the left, and builds an editable trip summary on the right. It asks only for missing essentials, waits for confirmation, then replaces the summary with ranked train results. The chat can be collapsed or resized with a pointer or keyboard without losing the conversation. The transition respects reduced-motion preferences. The original **Search by details** tab remains available for users who prefer a manual form.
 
-An optional server-side adapter can fetch timetable names, numbers, departure times, arrivals, and durations from [RailRadar's trains-between-stations API](https://railradar.in/docs/trains-between-stations). Add `RAILRADAR_API_KEY` to the server environment to enable it. The key is never sent to the browser, and local results remain available if the provider is unavailable. Fares and seat status remain illustrative because that endpoint does not supply booking inventory.
+An optional server-side adapter can fetch timetable names, numbers, departure times, arrivals, and durations from [RailRadar's trains-between-stations API](https://railradar.in/docs/trains-between-stations). Add `RAILRADAR_API_KEY` to the server environment to enable it. The key is never sent to the browser, and local results remain available if the provider is unavailable. Fares, seat status, expected platforms, and station facilities remain illustrative because that endpoint does not supply booking inventory or station amenities.
 
 The [official Open Government Data timetable catalog](https://www.data.gov.in/catalog/indian-railways-train-time-table) is useful as a historical reference, but its published timetable is old and the resource currently has no API. Indian Railways' [passenger enquiry](https://www.indianrail.gov.in/enquiry/SCHEDULE/TrainSchedule.jsp) remains the authoritative consumer-facing schedule reference.
 

@@ -4,6 +4,7 @@ import { Minus, Plus, Send, TrainFront, UserRound, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { JourneyIntent, RankingPriority } from '@/types/journey';
 import { CitySelect } from './CitySelect';
+import { RailChatIcon } from './RailChatIcon';
 
 type Props = { intent: JourneyIntent; onChange: (intent: JourneyIntent) => void; onSearch: () => void; onBack: () => void };
 
@@ -71,7 +72,7 @@ function DetailsChat({ intent }: { intent: JourneyIntent }) {
   };
 
   return <div className={`details-chat ${open ? 'is-open' : ''}`}>
-    {!open ? <button className="details-chat-launcher" type="button" onClick={() => setOpen(true)} aria-label="Open journey help chat" aria-controls="details-chat-panel" aria-expanded="false"><TrainFront size={21} /><span role="tooltip">Ask RailEase</span></button> : null}
+    {!open ? <button className="chat-launcher details-chat-launcher" type="button" onClick={() => setOpen(true)} aria-label="Open journey help chat" aria-controls="details-chat-panel" aria-expanded="false"><RailChatIcon /><span role="tooltip">Ask RailEase</span></button> : null}
     {open ? <aside className="details-chat-panel" id="details-chat-panel" aria-label="Journey help chat"><header><span><TrainFront size={16} /></span><div><strong>RailEase</strong><small>Journey help</small></div><button type="button" onClick={() => setOpen(false)} aria-label="Close journey help chat"><X size={17} /></button></header><div className="details-chat-context"><span>{intent.originCity}</span><b>→</b><span>{intent.destinationCity}</span></div><div className="details-chat-thread" aria-live="polite">{messages.map((message) => <div className={`details-chat-message ${message.role}`} key={message.id}><span>{message.role === 'assistant' ? <TrainFront size={13} /> : <UserRound size={13} />}</span><p>{message.text}</p></div>)}<div ref={threadEnd} /></div><div className="details-chat-compose"><div className="details-chat-prompts"><button type="button" onClick={() => send('What does confirmed mean?')}>Seat status</button><button type="button" onClick={() => send('Which class is comfortable?')}>Classes</button><button type="button" onClick={() => send('Can I travel with a waitlisted ticket?')}>Waitlist</button></div><form onSubmit={(event) => { event.preventDefault(); send(reply); }}><label className="sr-only" htmlFor="details-chat-reply">Ask about this journey</label><input id="details-chat-reply" name="journey-question" autoComplete="off" value={reply} onChange={(event) => setReply(event.target.value)} placeholder="Ask about your trip…" /><button type="submit" aria-label="Send question"><Send size={17} /></button></form></div></aside> : null}
   </div>;
 }

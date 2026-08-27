@@ -1,6 +1,6 @@
 # Project Progress
 
-Last updated: 26 August 2026
+Last updated: 27 August 2026
 
 ## Overall status
 
@@ -54,6 +54,9 @@ Last updated: 26 August 2026
 - [x] Add contextual chat help to the manual journey-details review page
 - [x] Add one-change journey options with transfer time, per-leg train details, combined fare, and availability
 - [x] Add consistent supported-city selectors to From and To fields across manual and conversational details
+- [x] Group all available travel classes within one card per train and preserve class-specific fare and availability
+- [x] Standardise the rail-chat launcher across direct and indirect journey contexts
+- [x] Add compact expected-platform and station-facility indicators beside station names
 
 ## Current focus
 
@@ -78,6 +81,9 @@ The refreshed product is live with public-link access at [railease-journey-plann
 - The chat panel can be resized on desktop, collapsed to prioritise results, and reopened without losing the conversation.
 - Choosing a journey now continues through traveller details, payment review, and confirmation without processing a real charge.
 - Indirect results use two compatible services, allow 90 minutes to 12 hours for transfer, and preserve both train legs through checkout.
+- Each train appears once with selectable class options and recalculated fare, availability, reasons, and trade-offs.
+- Direct, indirect, review, and payment contexts preserve the selected train class and station details.
+- Station rows show compact expected-platform, washroom, retiring-room, and AC waiting-room information with accessible labels.
 
 ## Decisions
 

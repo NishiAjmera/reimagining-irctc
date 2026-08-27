@@ -209,7 +209,7 @@ textarea::placeholder { color: #84909a; }
 .panel-title span { padding: 6px 9px; border-radius: 6px; background: #e6f0ed; color: #16615a; font-size: 10px; font-weight: 700; }
 .chat-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .chat-detail-grid label, .chat-priority { display: grid; gap: 7px; color: #526573; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
-.chat-detail-grid input, .chat-priority select { width: 100%; min-height: 48px; padding: 0 12px; border: 1px solid #c7ccca; border-radius: 8px; background: #fff; color: var(--ink); text-transform: none; letter-spacing: 0; font-size: 14px; }
+.chat-detail-grid input, .chat-detail-grid select, .chat-priority select { width: 100%; min-height: 48px; padding: 0 12px; border: 1px solid #c7ccca; border-radius: 8px; background: #fff; color: var(--ink); text-transform: none; letter-spacing: 0; font-size: 14px; }
 .chat-preferences { display: flex; flex-wrap: wrap; gap: 11px; margin: 22px 0; }
 .chat-preferences label { min-height: 42px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid #d3d5d1; border-radius: 8px; color: #405967; font-size: 12px; }
 .chat-preferences input { accent-color: var(--teal); }
@@ -349,7 +349,7 @@ input { font: inherit; color: var(--ink); }
 /* Structured search */
 .structured-grid { display: grid; grid-template-columns: 1fr 42px 1fr 1fr 120px; gap: 14px; align-items: end; }
 .structured-grid label, .edit-grid label { color: #4f6271; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
-.structured-grid input, .edit-grid input { width: 100%; min-height: 49px; margin-top: 7px; padding: 0 13px; border: 1px solid #c7cbc9; border-radius: 11px; background: white; text-transform: none; letter-spacing: normal; font-size: 15px; }
+.structured-grid input, .structured-grid select, .edit-grid input, .edit-grid select { width: 100%; min-height: 49px; margin-top: 7px; padding: 0 13px; border: 1px solid #c7cbc9; border-radius: 11px; background: white; color: var(--ink); text-transform: none; letter-spacing: normal; font-size: 15px; }
 .swap-button { width: 40px; height: 40px; margin-bottom: 4px; border: 1px solid var(--line); border-radius: 50%; background: #f7f3ea; color: var(--teal); cursor: pointer; font-size: 20px; }
 
 /* Intent confirmation */

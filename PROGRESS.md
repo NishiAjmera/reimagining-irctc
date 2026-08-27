@@ -53,6 +53,7 @@ Last updated: 26 August 2026
 - [x] Label waitlisted alternatives explicitly instead of reusing recommendation badges
 - [x] Add contextual chat help to the manual journey-details review page
 - [x] Add one-change journey options with transfer time, per-leg train details, combined fare, and availability
+- [x] Add consistent supported-city selectors to From and To fields across manual and conversational details
 
 ## Current focus
 

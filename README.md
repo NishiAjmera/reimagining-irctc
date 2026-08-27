@@ -18,6 +18,7 @@ RailEase optimises for **time to confident choice**. AI is embedded as an intent
 
 - Expanding conversational journey planning with guided follow-up questions
 - Traditional origin, destination, date, and passenger search
+- Consistent From and To selectors for all 16 supported cities
 - Local intent extraction with editable constraints
 - Nearby-date, nearby-station, class, availability, timing, comfort, and fare consideration
 - Three ranked recommendation cards with reasons and explicit trade-offs

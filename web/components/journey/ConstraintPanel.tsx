@@ -3,6 +3,7 @@
 import { Minus, Plus, Send, TrainFront, UserRound, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { JourneyIntent, RankingPriority } from '@/types/journey';
+import { CitySelect } from './CitySelect';
 
 type Props = { intent: JourneyIntent; onChange: (intent: JourneyIntent) => void; onSearch: () => void; onBack: () => void };
 
@@ -21,8 +22,8 @@ export function ConstraintPanel({ intent, onChange, onSearch, onBack }: Props) {
       <p className="screen-intro">Edit anything before searching.</p>
 
       <div className="edit-grid">
-        <label>From<input value={intent.originCity} onChange={(event) => set('originCity', event.target.value)} /></label>
-        <label>To<input value={intent.destinationCity} onChange={(event) => set('destinationCity', event.target.value)} /></label>
+        <label>From<CitySelect value={intent.originCity} exclude={intent.destinationCity} onChange={(city) => set('originCity', city)} /></label>
+        <label>To<CitySelect value={intent.destinationCity} exclude={intent.originCity} onChange={(city) => set('destinationCity', city)} /></label>
         <label>Travel date<input type="date" value={intent.preferredDate} onChange={(event) => set('preferredDate', event.target.value)} /></label>
         <label>Arrive before<input type="time" value={intent.arrivalBefore ?? ''} onChange={(event) => set('arrivalBefore', event.target.value || undefined)} /></label>
       </div>

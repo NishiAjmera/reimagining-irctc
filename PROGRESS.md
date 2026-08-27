@@ -52,6 +52,7 @@ Last updated: 26 August 2026
 - [x] Show lower-ranked and waitlisted alternatives as full selectable journey cards
 - [x] Label waitlisted alternatives explicitly instead of reusing recommendation badges
 - [x] Add contextual chat help to the manual journey-details review page
+- [x] Add one-change journey options with transfer time, per-leg train details, combined fare, and availability
 
 ## Current focus
 
@@ -75,6 +76,7 @@ The refreshed product is live with public-link access at [railease-journey-plann
 - Conversation and results stack vertically on narrower screens without changing the manual search path.
 - The chat panel can be resized on desktop, collapsed to prioritise results, and reopened without losing the conversation.
 - Choosing a journey now continues through traveller details, payment review, and confirmation without processing a real charge.
+- Indirect results use two compatible services, allow 90 minutes to 12 hours for transfer, and preserve both train legs through checkout.
 
 ## Decisions
 

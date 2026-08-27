@@ -75,11 +75,29 @@ export type JourneyOption = {
   reasons: string[];
   tradeoffs: string[];
   tags: TrainService['trainTags'];
+  legs?: JourneyLeg[];
+  transfer?: {
+    station: Station;
+    durationMinutes: number;
+  };
+};
+
+export type JourneyLeg = {
+  id: string;
+  trainNumber: string;
+  trainName: string;
+  departureStation: Station;
+  arrivalStation: Station;
+  departureDateTime: string;
+  arrivalDateTime: string;
+  durationMinutes: number;
+  classOption: ClassAvailability;
 };
 
 export type SearchOutcome = {
   options: JourneyOption[];
   otherOptions: JourneyOption[];
+  indirectOptions: JourneyOption[];
   alternatives: string[];
   considered: { dates: number; stations: number; trains: number; classes: number };
 };

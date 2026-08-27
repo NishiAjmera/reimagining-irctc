@@ -1,5 +1,5 @@
 import { fetchRailRadarServices } from '@/lib/data/railRadar';
-import { rankJourneys, rankJourneyServices } from '@/lib/ranking/rankJourneys';
+import { createIndirectJourneyOptions, rankJourneys, rankJourneyServices } from '@/lib/ranking/rankJourneys';
 import type { JourneyIntent } from '@/types/journey';
 
 export async function POST(request: Request) {
@@ -10,7 +10,7 @@ export async function POST(request: Request) {
 
   const liveServices = await fetchRailRadarServices(intent);
   return Response.json({
-    outcome: liveServices ? rankJourneyServices(intent, liveServices) : rankJourneys(intent),
+    outcome: liveServices ? { ...rankJourneyServices(intent, liveServices), indirectOptions: createIndirectJourneyOptions(intent) } : rankJourneys(intent),
     source: liveServices ? 'railradar' : 'sample',
   });
 }

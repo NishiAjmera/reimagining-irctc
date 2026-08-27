@@ -22,6 +22,7 @@ RailEase optimises for **time to confident choice**. AI is embedded as an intent
 - Nearby-date, nearby-station, class, availability, timing, comfort, and fare consideration
 - Three ranked recommendation cards with reasons and explicit trade-offs
 - Full, selectable detail cards for lower-ranked and waitlisted alternatives
+- Selectable one-change itineraries with interchange, transfer time, per-leg availability, and combined fare
 - Explicit waitlist-alternative labels and selection actions that preserve availability context
 - Plain-language explanations for railway classes, RAC, and waitlist
 - Contextual questions tied to the selected journey
@@ -77,7 +78,7 @@ The scoring algorithm starts from a base score and applies readable weights:
 - Comfortable AC sleeper for a senior traveller: `+10`
 - Fare, duration, and nearby-station adjustments
 
-The selection layer then surfaces the best overall choice, a viable budget choice, and a strong nearby-date alternative. The UI exposes the key score contributions instead of hiding them behind an opaque confidence claim.
+The selection layer then surfaces the best overall choice, a viable budget choice, and a strong nearby-date alternative. Direct recommendations remain primary; a separate section offers up to two one-change itineraries when a practical 90-minute-to-12-hour connection can be formed from the available services. The UI exposes the key score contributions instead of hiding them behind an opaque confidence claim.
 
 ## Run locally
 

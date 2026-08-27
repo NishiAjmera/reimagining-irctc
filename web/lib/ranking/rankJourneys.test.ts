@@ -44,4 +44,16 @@ describe('journey ranking', () => {
     expect(outcome.options[0].departureStation.city).toBe('Kolkata');
     expect(outcome.options[0].arrivalStation.city).toBe('Pune');
   });
+
+  it('builds practical one-change journeys from the existing route data', () => {
+    const outcome = rankJourneys(intent);
+    expect(outcome.indirectOptions.length).toBeGreaterThan(0);
+    const connection = outcome.indirectOptions[0];
+    expect(connection.legs).toHaveLength(2);
+    expect(connection.transfer?.durationMinutes).toBeGreaterThanOrEqual(90);
+    expect(connection.transfer?.durationMinutes).toBeLessThanOrEqual(720);
+    expect(connection.departureStation.city).toBe('Bengaluru');
+    expect(connection.arrivalStation.city).toBe('Jaipur');
+    expect(connection.classOption.fare).toBe(connection.legs?.reduce((total, leg) => total + leg.classOption.fare, 0));
+  });
 });

@@ -104,6 +104,47 @@ textarea::placeholder { color: #84909a; }
 .booking-why { border-radius: 10px; }
 .handoff-icon { box-shadow: none; }
 
+/* One-change itineraries */
+.indirect-options { display: grid; gap: 14px; margin-top: 14px; padding-top: 26px; }
+.indirect-options-heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; }
+.indirect-options-heading p { margin: 0 0 5px; }
+.indirect-options-heading h2 { margin: 0; font-size: 23px; }
+.indirect-options-heading > span { padding: 5px 9px; border-radius: 999px; background: #e6ece9; color: #365d59; font-size: 10px; font-weight: 700; }
+.indirect-options-intro { margin: -5px 0 2px; color: var(--muted); font-size: 11px; }
+.indirect-options-list { display: grid; gap: 14px; }
+.indirect-card { overflow: hidden; border: 1px solid #ccd2cf; border-radius: 12px; background: var(--paper); }
+.indirect-card-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 17px 20px; background: #eef2ef; }
+.indirect-card-head > div:first-child { display: flex; align-items: center; gap: 10px; }
+.indirect-card-head span { padding: 4px 7px; border-radius: 6px; background: var(--ink); color: white; font-size: 9px; font-weight: 750; text-transform: uppercase; letter-spacing: .08em; }
+.indirect-card-head h3 { margin: 0; font-size: 18px; }
+.indirect-card-head > div:last-child { display: grid; text-align: right; }
+.indirect-card-head > div:last-child strong { font-size: 14px; }
+.indirect-card-head small { color: var(--muted); font-size: 9px; }
+.indirect-summary { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 15px 20px; color: #354f5e; font-size: 12px; }
+.indirect-summary span { display: flex; gap: 6px; }
+.indirect-summary i { height: 1px; background: #b8c2c2; }
+.indirect-legs { margin: 0 20px; border-radius: 10px; background: #f7f5f0; }
+.indirect-leg { display: grid; grid-template-columns: 25px minmax(160px, 1.5fr) minmax(90px, 1fr) minmax(80px, .7fr) minmax(90px, 1fr); align-items: center; gap: 12px; padding: 15px; }
+.leg-number { width: 23px; height: 23px; display: grid; place-items: center; border-radius: 50%; background: #dfe9e6; color: var(--teal); font-size: 10px; font-weight: 800; }
+.leg-train, .leg-time { display: grid; gap: 3px; min-width: 0; }
+.leg-train strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.leg-train small, .leg-time small { color: var(--muted); font-size: 9px; }
+.leg-time strong { font-size: 13px; }
+.leg-time.arrival { text-align: right; }
+.leg-line { display: flex; align-items: center; justify-content: center; gap: 4px; color: var(--muted); font-size: 9px; }
+.transfer-row { min-height: 40px; display: flex; align-items: center; gap: 7px; padding: 0 15px 0 52px; background: #e8f1ee; color: #355a56; font-size: 10px; }
+.transfer-row > strong { margin-left: auto; color: var(--teal); }
+.indirect-footer { display: flex; align-items: end; justify-content: space-between; gap: 18px; padding: 17px 20px 20px; }
+.indirect-facts { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.indirect-facts > span { display: grid; gap: 4px; }
+.indirect-facts small { color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .05em; }
+.indirect-facts strong { font-size: 13px; }
+.indirect-facts .status { font-size: 11px; }
+.ticket-connection { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: #dedfd9; border-top: 1px solid #dedfd9; }
+.ticket-connection > span { display: grid; gap: 3px; padding: 13px 20px; background: #f5f3ed; }
+.ticket-connection b { font-size: 11px; }
+.ticket-connection small { color: var(--muted); font-size: 9px; }
+
 @media (max-width: 900px) {
   .priority-panel { grid-template-columns: 1fr; }
 }
@@ -115,6 +156,16 @@ textarea::placeholder { color: #84909a; }
   .constraint-footer > span { display: none; }
   .journey-card-body { padding: 18px 15px; }
   .data-note { text-align: left; }
+  .indirect-card-head, .indirect-footer { align-items: stretch; flex-direction: column; }
+  .indirect-card-head > div:last-child { text-align: left; }
+  .indirect-leg { grid-template-columns: 25px 1fr 1fr; }
+  .leg-train { grid-column: 2 / -1; }
+  .leg-line { display: none; }
+  .transfer-row { padding-left: 15px; }
+  .indirect-facts { grid-template-columns: 1fr 1fr; }
+  .indirect-facts > span:last-child { grid-column: 1 / -1; }
+  .indirect-footer .choose-button { width: 100%; justify-content: center; }
+  .ticket-connection { grid-template-columns: 1fr; }
 }
 
 /* Conversational planning workspace */

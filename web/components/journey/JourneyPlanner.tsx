@@ -348,7 +348,7 @@ function Results({ intent, outcome, dataSource, onEdit, onChoose, onDemo }: { in
 }
 
 function OtherJourneyOptions({ journeys, startIndex, onChoose }: { journeys: JourneyOption[]; startIndex: number; onChoose: (journey: JourneyOption) => void }) {
-  return <details className="other-options" open><summary>Other options <span>{journeys.length}</span></summary><div className="other-options-list">{journeys.map((journey, index) => <JourneyCard key={journey.id} journey={journey} index={startIndex + index} onChoose={onChoose} />)}</div></details>;
+  return <details className="other-options" open><summary>Other options <span>{journeys.length}</span></summary><div className="other-options-list">{journeys.map((journey, index) => <JourneyCard key={journey.id} journey={journey} index={startIndex + index} onChoose={onChoose} isOtherOption />)}</div></details>;
 }
 
 function Booking({ intent, journey, details, onChange, onBack, onContinue }: { intent: JourneyIntent; journey: JourneyOption; details: BookingDetails; onChange: (details: BookingDetails) => void; onBack: () => void; onContinue: () => void }) {

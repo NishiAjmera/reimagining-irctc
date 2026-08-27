@@ -355,6 +355,8 @@ input { font: inherit; color: var(--ink); }
 .journey-card.featured { border-color: #c55a4f; box-shadow: 0 12px 38px rgba(155,54,44,.09); }
 .card-ribbon { min-height: 42px; display: flex; justify-content: space-between; align-items: center; padding: 0 22px; background: #eceae4; color: #526574; font-size: 11px; font-weight: 760; text-transform: uppercase; letter-spacing: .1em; }
 .featured .card-ribbon { background: var(--red); color: white; }
+.journey-card.waitlisted-option .card-ribbon { background: #f3ead8; color: #785113; }
+.journey-card.waitlisted-option .option-title { color: #8b5b10; }
 .journey-card-body { padding: 25px; }
 .train-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
 .option-title { margin: 0 0 6px; color: var(--teal); font-size: 12px; font-weight: 760; text-transform: uppercase; letter-spacing: .1em; }

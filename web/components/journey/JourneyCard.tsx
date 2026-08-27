@@ -12,15 +12,19 @@ const badgeCopy = {
   ALTERNATIVE_DATE: ['Leave one day earlier', 'Best availability'],
 } as const;
 
-export function JourneyCard({ journey, index, onChoose }: { journey: JourneyOption; index: number; onChoose: (journey: JourneyOption) => void }) {
+export function JourneyCard({ journey, index, onChoose, isOtherOption = false }: { journey: JourneyOption; index: number; onChoose: (journey: JourneyOption) => void; isOtherOption?: boolean }) {
   const [whyOpen, setWhyOpen] = useState(false);
-  const [badge, title] = badgeCopy[journey.recommendationType];
+  const [rankingBadge, rankingTitle] = badgeCopy[journey.recommendationType];
   const status = journey.classOption.status;
   const statusText = status === 'CONFIRMED' ? 'Confirmed' : status === 'RAC' ? `RAC ${journey.classOption.position}` : `WL ${journey.classOption.position}`;
+  const waitlistedAlternative = isOtherOption && status === 'WAITLIST';
+  const badge = isOtherOption ? waitlistedAlternative ? 'Waitlisted alternative' : 'Additional option' : rankingBadge;
+  const title = isOtherOption ? waitlistedAlternative ? `${journey.classOption.code} waitlist option` : 'Another route to consider' : rankingTitle;
   const cheapest = journey.recommendationType === 'CHEAPEST';
+  const chooseLabel = waitlistedAlternative ? `Choose WL ${journey.classOption.position} journey` : cheapest ? 'Choose budget option' : journey.recommendationType === 'ALTERNATIVE_DATE' ? 'Choose Thursday option' : 'Choose this journey';
 
   return (
-    <article className={`journey-card ${index === 0 ? 'featured' : ''}`} aria-labelledby={`journey-${journey.id}`}>
+    <article className={`journey-card ${index === 0 ? 'featured' : ''} ${waitlistedAlternative ? 'waitlisted-option' : ''}`} aria-labelledby={`journey-${journey.id}`}>
       <div className="card-ribbon"><span>{badge}</span><span>Option {index + 1}</span></div>
       <div className="journey-card-body">
         <div className="train-title-row">
@@ -44,7 +48,7 @@ export function JourneyCard({ journey, index, onChoose }: { journey: JourneyOpti
 
         <div className="card-actions">
           <button type="button" className="why-button" onClick={() => { setWhyOpen((value) => !value); track('recommendation_explanation_opened', { journeyId: journey.id }); }} aria-expanded={whyOpen}>Why this one? <ChevronDown size={16} /></button>
-          <button type="button" className="choose-button" onClick={() => onChoose(journey)}>{cheapest ? 'Choose budget option' : journey.recommendationType === 'ALTERNATIVE_DATE' ? 'Choose Thursday option' : 'Choose this journey'} <ArrowRight size={17} /></button>
+          <button type="button" className="choose-button" onClick={() => onChoose(journey)}>{chooseLabel} <ArrowRight size={17} /></button>
         </div>
 
         {whyOpen ? <div className="why-panel"><ul>{journey.reasons.slice(0, 4).map((reason) => <li key={reason}><Check size={16} /> {reason}</li>)}</ul></div> : null}

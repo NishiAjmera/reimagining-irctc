@@ -6,7 +6,7 @@ export function JourneyModePicker({ intent, onChange, compact = false }: { inten
   const originNeedsRoad = hasRoadConnection(intent.originCity);
   const destinationNeedsRoad = hasRoadConnection(intent.destinationCity);
   if (!originNeedsRoad && !destinationNeedsRoad) return null;
-  const mode = intent.journeyMode ?? 'train_only';
+  const mode = intent.journeyMode;
   const setMode = (journeyMode: JourneyMode) => onChange({ ...intent, journeyMode });
   const updateRailCity = (direction: 'origin' | 'destination', railCity: string) => onChange({ ...intent, [direction === 'origin' ? 'originRailCity' : 'destinationRailCity']: railCity });
 
@@ -20,7 +20,7 @@ export function JourneyModePicker({ intent, onChange, compact = false }: { inten
       {originNeedsRoad ? <label>Board train at<RailheadSelect location={intent.originCity} value={intent.originRailCity} onChange={(value) => updateRailCity('origin', value)} /></label> : null}
       {destinationNeedsRoad ? <label>Leave train at<RailheadSelect location={intent.destinationCity} value={intent.destinationRailCity} onChange={(value) => updateRailCity('destination', value)} /></label> : null}
     </div>
-    <p className="journey-mode-note">{mode === 'complete' ? 'Bus segments, connection time and total fare will be included in the results.' : 'Results begin and end at the selected railway station; local transport is not included.'}</p>
+    <p className="journey-mode-note">{mode === 'complete' ? 'Bus segments, connection time and total fare will be included in the results.' : mode === 'train_only' ? 'Results begin and end at the selected railway station; local transport is not included.' : 'Choose train-only results or include bus connections.'}</p>
   </section>;
 }
 

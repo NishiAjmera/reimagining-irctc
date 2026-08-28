@@ -1,5 +1,18 @@
 @import 'tailwindcss';
 
+.chat-status { padding: 10px 18px; color: var(--muted); font-size: 13px; }
+.chat-error { padding: 10px 12px; background: #fff7e9; color: #754b15; border-radius: 10px; font-size: 13px; margin-bottom: 10px; }
+.chat-error p { margin: 0; }
+.chat-error button { text-decoration: underline; margin-top: 6px; font-weight: 650; }
+.chat-compose .chat-search-action { width: 100%; margin-bottom: 10px; font-size: 13px; padding: 10px 14px; }
+.chat-compose button:disabled { opacity: .5; cursor: not-allowed; }
+.chat-extra-details { margin: 16px 0; }
+.chat-extra-details summary { cursor: pointer; font-size: 13px; font-weight: 650; }
+.chat-extra-details .chat-detail-grid { margin-top: 12px; }
+.chat-results-lock { min-width: 0; border: 0; padding: 0; margin: 0; }
+.chat-results-lock:disabled { opacity: .65; }
+.chat-message p { white-space: pre-line; }
+
 :root {
   --cream: #f7f3ea;
   --paper: #fffdf8;
@@ -731,7 +744,13 @@ input { font: inherit; color: var(--ink); }
 .luggage-heading, .luggage-rate-row, .luggage-booking-footer, .luggage-assignment-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
 .luggage-heading { margin-bottom: 14px; }
 .luggage-heading h4 { margin: 0; font-size: 15px; }
-.luggage-sample { padding: 4px 7px; border-radius: 5px; color: #75624b; background: #f3eee3; font-size: 9px; }
+.luggage-status { padding: 4px 7px; border-radius: 5px; color: #75624b; background: #f3eee3; font-size: 9px; }
+.porter-contact { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-top: 14px; padding-top: 12px; }
+.porter-contact > div { flex-basis: 100%; display: grid; gap: 4px; }
+.porter-contact strong { font-size: 11px; }
+.porter-contact span, .porter-contact a { color: var(--muted); font-size: 10px; }
+.porter-contact button { display: inline-flex; align-items: center; gap: 5px; padding: 7px 9px; border: 0; border-radius: 5px; background: #e8e7e1; color: #77817e; font-size: 10px; cursor: not-allowed; }
+.porter-contact a { text-underline-offset: 3px; }
 .luggage-station-picker { min-width: 0; margin: 0; padding: 0; border: 0; }
 .luggage-station-picker legend { padding: 0; font-size: 12px; color: var(--muted); }
 .luggage-rate-row { margin: 8px 0 12px; font-size: 11px; color: var(--muted); }

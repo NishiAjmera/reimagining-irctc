@@ -2,6 +2,7 @@ import { createSampleServices, trains } from '@/lib/data/trains';
 import { getTravelLocation, railConnectionsFor, resolveRailCity } from '@/lib/data/locations';
 import type { AvailabilityStatus, ClassAvailability, JourneyClassChoice, JourneyIntent, JourneyLeg, JourneyOption, RoadLeg, ScoreBreakdown, SearchOutcome, TrainService } from '@/types/journey';
 import { scoreJourney, withRecommendation } from './scoreJourney';
+import { applySearchPreferences, indianTime } from './searchPreferences';
 
 const byScore = (a: JourneyOption, b: JourneyOption) => b.score - a.score;
 
@@ -26,9 +27,9 @@ export function resolveRailIntent(intent: JourneyIntent): JourneyIntent {
 }
 
 export function addRoadConnections(intent: JourneyIntent, outcome: SearchOutcome): SearchOutcome {
-  if (intent.journeyMode !== 'complete') return outcome;
+  if (intent.journeyMode !== 'complete') return applySearchPreferences(outcome, intent);
   const apply = (option: JourneyOption) => attachRoadLegs(intent, option);
-  return { ...outcome, options: outcome.options.map(apply), otherOptions: outcome.otherOptions.map(apply), indirectOptions: outcome.indirectOptions.map(apply) };
+  return applySearchPreferences({ ...outcome, options: outcome.options.map(apply), otherOptions: outcome.otherOptions.map(apply), indirectOptions: outcome.indirectOptions.map(apply) }, intent);
 }
 
 function attachRoadLegs(intent: JourneyIntent, option: JourneyOption): JourneyOption {
@@ -283,7 +284,7 @@ function formatDuration(minutes: number) {
 
 function alignToSearchDate(train: TrainService, preferredDate: string): TrainService {
   const departureDate = shiftDate(preferredDate, train.searchDateOffset ?? 0);
-  const departureTime = train.departureDateTime.slice(11, 19);
+  const departureTime = `${indianTime(train.departureDateTime)}:00`;
   const departure = new Date(`${departureDate}T${departureTime}+05:30`);
   return {
     ...train,

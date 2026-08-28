@@ -1,12 +1,14 @@
 import { fetchRailRadarServices } from '@/lib/data/railRadar';
 import { addRoadConnections, createIndirectJourneyOptions, rankJourneys, rankJourneyServices, resolveRailIntent } from '@/lib/ranking/rankJourneys';
 import type { JourneyIntent } from '@/types/journey';
+import { missingJourneyFields, validateDraft } from '@/lib/chat/contract';
 
 export async function POST(request: Request) {
-  const intent = await request.json() as JourneyIntent;
-  if (!intent.originCity || !intent.destinationCity || !intent.preferredDate) {
-    return Response.json({ error: 'Origin, destination and date are required.' }, { status: 400 });
-  }
+  let intent: JourneyIntent;
+  try {
+    intent = validateDraft(await request.json());
+    if (missingJourneyFields(intent).length) throw new Error('Incomplete trip');
+  } catch { return Response.json({ error: 'Please check your route, dates, travellers and preferences.' }, { status: 400 }); }
 
   const railIntent = resolveRailIntent(intent);
   const liveServices = await fetchRailRadarServices(railIntent);

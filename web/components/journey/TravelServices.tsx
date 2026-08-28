@@ -33,7 +33,7 @@ export function TravelServices({ journey }: { journey: JourneyOption }) {
       </> : null}
       {serviceId === 'food' ? <>
         <div className="service-train-tags">{context.trains.map((train) => <span key={train.id}>{train.trainName} <small>#{train.trainNumber}</small></span>)}</div>
-        <p>Enter your railway PNR on Swiggy to see delivery stations and restaurants. The RailEase sample reference is not a railway PNR.</p>
+        <p>Enter your railway PNR on Swiggy to see delivery stations and restaurants. Your RailEase reference is separate from your railway PNR.</p>
         <div className="service-links"><ProviderLink href={travelServiceLinks.swiggy}>Open Swiggy Food on Train</ProviderLink></div>
       </> : null}
       {serviceId === 'luggage' ? <LuggageAssistanceBooking key={journey.id} stops={context.stops} /> : null}

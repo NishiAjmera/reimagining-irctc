@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { LuggageAssistanceBooking } from '@/components/journey/LuggageAssistanceBooking';
+import { LuggageAssistanceBooking, PorterContactDetails } from '@/components/journey/LuggageAssistanceBooking';
 import { LocalIntentParser } from '@/lib/intent/localParser';
 import { rankJourneys } from '@/lib/ranking/rankJourneys';
 import { travelServiceContext } from './travelServices';
@@ -82,15 +82,25 @@ describe('mock luggage assistance booking', () => {
     expect(luggageQuote([crossStation], selection)).toEqual([]);
   });
 
-  it('shows sample pricing, both endpoints, and no old enquiry-only instruction', () => {
+  it('shows estimated pricing and both endpoints with product-style copy', () => {
     const html = renderToStaticMarkup(createElement(LuggageAssistanceBooking, { stops }));
     expect(html).toContain('From · Departure station');
     expect(html).toContain('To · Arrival station');
     expect(html).toContain('Select both ends');
     expect(html).toContain('₹80');
     expect(html).toContain('per bag, per station');
-    expect(html).toContain('Book assistance');
-    expect(html).toContain('No payment or porter dispatch');
+    expect(html).toContain('Review assistance');
+    expect(html).toContain('Provider confirmation is required');
     expect(html).not.toContain('Ask station staff');
+    const visibleText = html.replace(/<[^>]*>/g, '');
+    expect(visibleText).not.toMatch(/sample|prototype|fictional|demo|dispatch/i);
+  });
+
+  it('does not invent a callable porter number', () => {
+    const html = renderToStaticMarkup(createElement(PorterContactDetails));
+    expect(html).toContain('Contact details');
+    expect(html).toContain('Direct number unavailable until confirmed');
+    expect(html).toContain('disabled=""');
+    expect([...html.matchAll(/href="(tel:[^"]+)"/g)].map((match) => match[1])).toEqual(['tel:139']);
   });
 });

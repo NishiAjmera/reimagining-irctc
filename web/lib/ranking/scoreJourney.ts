@@ -1,7 +1,6 @@
 import type { JourneyIntent, JourneyOption, RecommendationType, ScoreBreakdown, TrainService } from '@/types/journey';
+import { indianDate as localDate, indianTime as localTime } from './searchPreferences';
 
-const localDate = (iso: string) => iso.slice(0, 10);
-const localTime = (iso: string) => iso.slice(11, 16);
 const dayDistance = (left: string, right: string) => Math.round(Math.abs(Date.parse(`${left}T00:00:00Z`) - Date.parse(`${right}T00:00:00Z`)) / 86_400_000);
 
 export function scoreJourney(train: TrainService, classIndex: number, intent: JourneyIntent): JourneyOption {

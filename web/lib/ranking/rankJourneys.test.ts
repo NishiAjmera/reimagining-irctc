@@ -4,6 +4,7 @@ import { LocalIntentParser } from '@/lib/intent/localParser';
 import type { JourneyIntent } from '@/types/journey';
 import { rankJourneys, recommendAlternatives } from './rankJourneys';
 import { scoreJourney } from './scoreJourney';
+import { preferenceWarnings } from './searchPreferences';
 
 const intent: JourneyIntent = new LocalIntentParser().parse("I need to travel from Bengaluru to Jaipur next Friday. Reach by 4 PM. We’re three people including my mother, and I don’t want a waitlisted ticket.");
 
@@ -40,7 +41,9 @@ describe('journey ranking', () => {
 
   it('returns sample journeys between supported major cities', () => {
     const outcome = rankJourneys({ ...intent, originCity: 'Kolkata', destinationCity: 'Pune', preferredDate: '2026-09-12' });
-    expect(outcome.options).toHaveLength(3);
+    expect(outcome.options.length).toBeGreaterThan(0);
+    expect([...outcome.options, ...outcome.otherOptions].length).toBeGreaterThanOrEqual(3);
+    expect(outcome.options.every((option) => !preferenceWarnings(option, { ...intent, originCity: 'Kolkata', destinationCity: 'Pune', preferredDate: '2026-09-12' }).length)).toBe(true);
     expect(outcome.options[0].departureStation.city).toBe('Kolkata');
     expect(outcome.options[0].arrivalStation.city).toBe('Pune');
   });

@@ -25,7 +25,7 @@ export function JourneyCard({journey,index,onChoose,isOtherOption=false}:{journe
     <JourneyTimeline journey={active} expanded={expanded}/>
     <JourneyClassPicker journey={journey} selectedId={active.id} onSelect={item=>setSelectedClassId(item.id)}/>
     {warnings.length?<p className="compact-warning" role="status"><TriangleAlert size={14}/><span>{warnings.join(' · ')}</span></p>:null}
-    {hasBus?<p className="compact-connection-note">Bus times and seats are illustrative. Reconfirm {active.roadLegs?.length===2?'both connections':'the connection'} before travel.</p>:null}
+    {hasBus?<p className="compact-connection-note">Confirm bus times and seats for {active.roadLegs?.length===2?'both connections':'the connection'} with the operator before travel.</p>:null}
     <div className="compact-card-footer"><button type="button" className="compact-details-toggle" aria-expanded={expanded} aria-controls={detailsId} onClick={()=>{setExpanded(value=>!value);track('recommendation_explanation_opened',{journeyId:journey.id});}}>Journey details <ChevronDown size={15}/></button><div className="compact-total"><strong>₹{active.totalFare.toLocaleString('en-IN')}</strong><small>{hasBus?'Bus + train total':'Total fare'} · all travellers</small></div><button type="button" className="choose-button" onClick={()=>onChoose(active)}>{status==='WAITLIST'?'Choose waitlist':'Choose journey'}<ArrowRight size={16}/></button></div>
     <div id={detailsId} hidden={!expanded} className="compact-expanded-details"><h4>Why this option</h4><ul>{[...active.reasons,...active.tradeoffs].map((reason,i)=><li key={`${reason}-${i}`}>{reason}</li>)}</ul></div>
   </article>;

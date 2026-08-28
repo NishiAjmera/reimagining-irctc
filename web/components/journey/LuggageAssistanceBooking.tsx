@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, useRef, useState } from 'react';
-import { Check, Clock3, MapPin, UserRound } from 'lucide-react';
+import { Check, Clock3, MapPin, Phone, UserRound } from 'lucide-react';
 import type { AssistanceStop } from '@/lib/journey/travelServices';
 import { createMockLuggageBooking, initialLuggageSelection, luggageQuote, MAX_ASSISTANCE_BAGS, SAMPLE_BAG_RATE, supportsLuggageAssistance, type MockLuggageBooking } from '@/lib/journey/luggageAssistance';
 import { journeyClock, journeyDate } from '@/lib/journey/itinerary';
@@ -24,25 +24,26 @@ export function LuggageAssistanceBooking({ stops }: { stops: AssistanceStop[] })
     event.preventDefault();
     if (!quote.length || booking) return;
     setBooking(createMockLuggageBooking(stops, selection));
-    setNotice('Sample assistance booking confirmed. No payment or porter dispatch.');
+    setNotice('Assistance details ready for review. Provider confirmation is required.');
     headingRef.current?.focus();
   };
 
   return <div className="luggage-booking">
-    <div className="luggage-heading"><h4 ref={headingRef} tabIndex={-1}>{booking ? 'Assistance booked' : 'Where would you like a hand?'}</h4><span className="luggage-sample">Sample booking</span></div>
+    <div className="luggage-heading"><h4 ref={headingRef} tabIndex={-1}>{booking ? 'Your assistance plan' : 'Where would you like a hand?'}</h4>{booking ? <span className="luggage-status">Not reserved</span> : null}</div>
     <span role="status" className="sr-only">{notice}</span>
     {booking ? <>
       <div className="luggage-assignments">{booking.assignments.map((assignment) => <article className="luggage-assignment" key={assignment.stop.id}>
         <div className="luggage-assignment-top"><span><Check size={14} aria-hidden="true" />{stopLabel(assignment.stop)}</span><strong>{rupees(assignment.amount)}</strong></div>
         <h5>{assignment.stop.station.name}</h5>
         <div className="luggage-person"><span className="luggage-avatar"><UserRound size={19} aria-hidden="true" /></span><div><strong>{assignment.porterName}</strong><small>{assignment.bags} {assignment.bags === 1 ? 'bag' : 'bags'} · {assignment.stop.nextTrainNumber ? `Train ${assignment.stop.trainNumber} → ${assignment.stop.nextTrainNumber}` : `Train ${assignment.stop.trainNumber}`}</small></div></div>
-        <p className="luggage-meeting"><MapPin size={15} aria-hidden="true" /><span>Meet {assignment.porterName.split(' ')[0]} at <strong>{assignment.meetingPoint.toLowerCase()}</strong>.</span></p>
+        <p className="luggage-meeting"><MapPin size={15} aria-hidden="true" /><span>Preferred meeting point: <strong>{assignment.meetingPoint.toLowerCase()}</strong>.</span></p>
         <p className="luggage-meeting"><Clock3 size={15} aria-hidden="true" /><span>{journeyDate(assignment.meetingTime)} · {journeyClock(assignment.meetingTime)}{assignment.stop.id === 'boarding' ? ' · 30 min before departure' : ' · On train arrival'}</span></p>
+        <PorterContactDetails />
       </article>)}</div>
-      <div className="luggage-booking-footer"><span>Total <strong>{rupees(booking.total)}</strong></span><button type="button" className="luggage-text-button" onClick={() => { setBooking(null); setNotice('Sample booking cancelled. You can choose stations and book again.'); headingRef.current?.focus(); }}>Cancel sample booking</button></div>
-      <p className="service-footnote">Fictional porter details and meeting points. No payment was taken or porter dispatched.</p>
+      <div className="luggage-booking-footer"><span>Estimated total <strong>{rupees(booking.total)}</strong></span><button type="button" className="luggage-text-button" onClick={() => { setBooking(null); setNotice('Assistance selection cleared. Choose stations to start again.'); headingRef.current?.focus(); }}>Change assistance</button></div>
+      <p className="service-footnote">Confirm your assistant, meeting point and final charge with the provider before travel.</p>
     </> : <form onSubmit={book}>
-      <fieldset className="luggage-station-picker"><legend>Choose one or both ends of your journey</legend><div className="luggage-rate-row"><span>{rupees(SAMPLE_BAG_RATE)} per bag, per station · sample rate</span><button type="button" className="luggage-text-button" onClick={selectBoth}>Select both ends</button></div>
+      <fieldset className="luggage-station-picker"><legend>Choose one or both ends of your journey</legend><div className="luggage-rate-row"><span>Estimated {rupees(SAMPLE_BAG_RATE)} per bag, per station</span><button type="button" className="luggage-text-button" onClick={selectBoth}>Select both ends</button></div>
         <div className="luggage-station-options">{stops.map((stop) => {
           const supported = supportsLuggageAssistance(stop);
           const selected = selection[stop.id]?.selected && supported;
@@ -53,8 +54,12 @@ export function LuggageAssistanceBooking({ stops }: { stops: AssistanceStop[] })
           </div>;
         })}</div>
       </fieldset>
-      <div className="luggage-booking-footer"><div className="luggage-total" aria-live="polite"><small>{quote.length} {quote.length === 1 ? 'station' : 'stations'} selected</small><span>Total <strong>{rupees(total)}</strong></span></div><button type="submit" className="primary-button" disabled={!quote.length}>Book assistance · {rupees(total)}</button></div>
-      <p className="service-footnote">Sample booking only. No payment or porter dispatch.</p>
+      <div className="luggage-booking-footer"><div className="luggage-total" aria-live="polite"><small>{quote.length} {quote.length === 1 ? 'station' : 'stations'} selected</small><span>Estimated total <strong>{rupees(total)}</strong></span></div><button type="submit" className="primary-button" disabled={!quote.length}>Review assistance · {rupees(total)}</button></div>
+      <p className="service-footnote">Provider confirmation is required to reserve assistance.</p>
     </form>}
   </div>;
+}
+
+export function PorterContactDetails() {
+  return <div className="porter-contact"><div><strong>Contact details</strong><span>Direct number unavailable until confirmed</span></div><button type="button" disabled><Phone size={13} aria-hidden="true" /> Call assistant</button><a href="tel:139">Railway enquiries · 139</a></div>;
 }

@@ -19,7 +19,9 @@ export type JourneyIntent = {
   preferredDate: string;
   flexibilityDays: number;
   arrivalBefore?: string;
+  arrivalDate?: string;
   departureAfter?: string;
+  preferredClass?: string;
   passengerCount: number;
   seniorTraveller: boolean;
   confirmedOnly: boolean;

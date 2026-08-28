@@ -4,7 +4,7 @@ Last updated: 28 August 2026
 
 ## Overall status
 
-**Product refresh complete and publicly released**
+**Published product live; Gemini chat and search-capture fixes validated locally, not yet published**
 
 ## Milestones
 
@@ -64,6 +64,10 @@ Last updated: 28 August 2026
 
 ## Current focus
 
+Gemini 3.7 Flash chat is configured and live-tested locally, with one shared conversation for natural-language and manual entry, explicit search confirmation and grounded result follow-ups. Testing exposed omitted fields in optional model patches; a complete required-field trip snapshot now produces validated diffs and confirmations derived from the saved state. Search enforces captured dates, timing, arrival deadlines, preferred class, confirmed seats and full-trip budget, including both bus legs. Non-matching options remain available with trade-offs. The key stays server-side. Two-minute isolated response caching and duplicate-request coalescing were verified; short requests had no provider-cache hits. Local-only access is enabled; production paid-chat access fails closed without an allowlisted Sites identity. No new publication has occurred. Setup, limits and regression instructions: `docs/gemini-chat.md`.
+
+Local review: replaced Guest with Nishi Ajmera, removed developer-style copy from customer screens, and added the booking contact phone plus a luggage-assistance contact area. Direct porter calling stays disabled without a confirmed number; railway enquiries remains available on 139. Planning/estimated/provider-confirmation wording replaces false paid or reserved claims. No changes to provider integrations or authentication.
+
 Travel extras includes cab, food and parcel provider handoffs plus mock luggage booking at departure, arrival, or both, with optional same-station transfers, per-stop bag counts and sample ₹80-per-bag pricing. Confirmation shows fictional porter names, meeting landmarks and times; cancellation returns to the editable form. No charge, dispatch or external reservation occurs for luggage assistance. The provider handoffs were committed separately as `809507f`. See `docs/travel-services.md` for integration boundaries.
 
 The original compact icon-only station facility row now includes cloakroom, lockers and Divyangjan facilities, with sample availability requested for the prototype. Unavailable facilities remain greyed out. Short custom tooltips explain each icon and its status on hover, keyboard focus or tap; no expanding notes or extra information panels. Escape dismisses tooltips. Unknown stations retain the unverified fallback.
@@ -74,7 +78,11 @@ The refreshed product is live with public-link access at [railease-journey-plann
 
 ## Verification
 
-- 35 automated tests pass, covering itinerary ordering and fares, station facilities and tooltips, travel-service handoffs, and mock luggage pricing, both-end and arrival-only bookings, assignments, meeting times, snapshot stability and invalid selections. Typecheck, lint and production build pass for the luggage-booking update.
+- Gemini/search validation: 94 automated tests, typecheck, lint and production build pass. Six-turn live Gemini regression passes for town connections, corrections, manual-state authority, preference clearing and complete route replacement; the actual search endpoint returns only preference-matching primary options. Concurrent duplicate calls reuse one validated response. The key remains ignored and server-side; production is unchanged.
+
+- Signed-in browser QA: natural-language capture reaches search and traveller review; questions use displayed fare data; retry recovers a slow provider response without duplicate messages; closing/reopening and returning from journey selection preserve the conversation. Manual edits invalidate in-flight replies. Manual town-to-town details feed the shared chat and optional bus connections. Fixed native date-input synchronization discovered during this check.
+
+- 36 automated tests pass, covering itinerary ordering and fares, station facilities, travel-service handoffs, luggage pricing and selections, product-style copy, and contact safety (no invented callable porter number). Typecheck, lint and production build pass for the profile and copy update.
 
 - Intent parser correctly extracts the primary Bengaluru → Jaipur scenario.
 - Confirmed, on-time 3A ranks above cheaper waitlisted choices.

@@ -4,6 +4,13 @@
 .chat-error { padding: 10px 12px; background: #fff7e9; color: #754b15; border-radius: 10px; font-size: 13px; margin-bottom: 10px; }
 .chat-error p { margin: 0; }
 .chat-error button { text-decoration: underline; margin-top: 6px; font-weight: 650; }
+.travel-extras-preview { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px 24px; margin: 18px 0 24px; padding: 16px 18px; border-radius: 12px; background: #edf1eb; text-align: left; }
+.travel-extras-preview strong { display: block; font-size: 13px; font-weight: 700; color: var(--ink); }
+.travel-extras-preview p { margin: 5px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
+.travel-extras-preview ul { display: flex; flex-wrap: wrap; gap: 12px 18px; list-style: none; margin: 0; padding: 0; }
+.travel-extras-preview li { display: flex; align-items: center; gap: 7px; color: var(--ink); font-size: 12px; white-space: nowrap; }
+.travel-extras-preview li svg { color: var(--teal); flex-shrink: 0; }
+@media (max-width: 600px) { .travel-extras-preview { padding: 14px; }.travel-extras-preview ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; gap: 12px; }.travel-extras-preview li { white-space: normal; } }
 .chat-booking-panel { max-width: 1000px; margin: 0 auto; }
 .chat-booking-steps { display: flex; gap: 24px; list-style: none; padding: 0; margin: 0 0 26px; color: var(--muted); font-size: 12px; }
 .chat-booking-steps li { display: flex; align-items: center; gap: 8px; }

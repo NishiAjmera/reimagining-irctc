@@ -64,13 +64,15 @@ Last updated: 28 August 2026
 
 ## Current focus
 
+The original compact icon-only station facility row now includes cloakroom, lockers and Divyangjan facilities, with sample availability requested for the prototype. Unavailable facilities remain greyed out. Short custom tooltips explain each icon and its status on hover, keyboard focus or tap; no expanding notes or extra information panels. Escape dismisses tooltips. Unknown stations retain the unverified fallback.
+
 Compact journey cards now use a single travel-order timeline, including bus → train → bus journeys. Full-trip timing, transfer buffers, class choices, warnings and the complete fare stay visible; secondary details expand on demand. Priorities are inline instead of occupying a sidebar.
 
 The refreshed product is live with public-link access at [railease-journey-planner.nishiajmera21.chatgpt.site](https://railease-journey-planner.nishiajmera21.chatgpt.site). Access credentials are distributed separately and are never displayed in the UI or repository documentation.
 
 ## Verification
 
-- 17 automated tests pass, including town-to-town segment order, transfer buffers, full fare after class changes, train-only mode, and overnight timing.
+- 21 automated tests cover town-to-town segment order, transfer buffers, full fare after class changes, train-only mode, overnight timing, sample facility data, linked tooltips, greyed-out unavailable facilities, and the unknown-station fallback.
 
 - Intent parser correctly extracts the primary Bengaluru → Jaipur scenario.
 - Confirmed, on-time 3A ranks above cheaper waitlisted choices.

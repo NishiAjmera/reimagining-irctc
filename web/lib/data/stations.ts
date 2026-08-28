@@ -38,16 +38,24 @@ export type StationAmenities = {
   washrooms: boolean;
   retiringRoom: boolean;
   acWaitingRoom: boolean;
+  // null means unknown, not unavailable. The current catalogue is sample data.
+  cloakroom: boolean | null;
+  lockers: boolean | null;
+  divyangjan: boolean | null;
 };
 
 const limitedRetiringRooms = new Set(['GADJ', 'SMVB']);
 const limitedAcWaitingRooms = new Set(['GADJ', 'SMVB', 'ERS', 'CDG']);
 
+// Illustrative facility availability for the prototype; not a live station feed.
 export const stationAmenitiesByCode = Object.fromEntries(
   Object.keys(stations).map((code) => [code, {
     washrooms: true,
     retiringRoom: !limitedRetiringRooms.has(code),
     acWaitingRoom: !limitedAcWaitingRooms.has(code),
+    cloakroom: true,
+    lockers: true,
+    divyangjan: true,
   }]),
 ) as Record<string, StationAmenities>;
 

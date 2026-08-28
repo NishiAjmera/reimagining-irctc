@@ -37,7 +37,7 @@ RailEase optimises for **time to confident choice**. AI is embedded as an intent
 - Compact, collapsible chat presented as an inset card with adjustable width, scroll-edge text fading, and keyboard-accessible controls
 - Contextual journey-help chat on the manual details review page
 - Consistent rail-chat launchers across direct and indirect journey flows
-- Compact expected-platform and station-facility indicators beside each boarding and arrival station
+- Compact expected-platform and station-facility icons beside each boarding and arrival station, including cloakroom, lockers and Divyangjan facilities; unavailable icons are greyed out, with short hover, focus and tap tooltips
 - Optional train-only or complete bus-and-train planning for towns without railway stations
 - Nearby railhead selection, connection buffers, bus details, and combined journey fares carried through checkout
 - Compact cards with ordered bus/train segments, full-trip timing, inline priorities, and expandable journey details

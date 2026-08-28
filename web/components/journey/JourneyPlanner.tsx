@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, ArrowRight, BusFront, CalendarDays, Check, Clock3, CreditCard, GripVertical, Languages, Landmark, LockKeyhole, MapPin, Menu, PanelLeftClose, Search, Send, ShieldCheck, Smartphone, TicketCheck, TrainFront, UserRound, Users, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BusFront, CalendarDays, Check, CreditCard, GripVertical, Languages, Landmark, LockKeyhole, MapPin, Menu, PanelLeftClose, Search, Send, ShieldCheck, Smartphone, TicketCheck, TrainFront, UserRound, Users, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { track } from '@/lib/analytics';
 import { explainQuestion, suggestedQuestions } from '@/lib/explanation/recommendation';
@@ -14,9 +14,9 @@ import { JourneyCard } from './JourneyCard';
 import { IndirectJourneyCard } from './IndirectJourneyCard';
 import { PriorityPanel } from './PriorityPanel';
 import { RailChatIcon } from './RailChatIcon';
-import { StationInlineInfo } from './StationInlineInfo';
+import { JourneyTimeline } from './JourneyTimeline';
+import { itineraryOverview, journeyDate } from '@/lib/journey/itinerary';
 import { JourneyModePicker } from './JourneyModePicker';
-import { RoadConnectionStrip } from './RoadConnectionStrip';
 import { hasRoadConnection, resolveRailCity } from '@/lib/data/locations';
 
 type Stage = 'home' | 'chat' | 'constraints' | 'searching' | 'results' | 'booking' | 'payment' | 'confirmed';
@@ -398,7 +398,12 @@ function Booking({ intent, journey, details, onChange, onBack, onContinue }: { i
 }
 
 function SelectedJourney({ journey, intent, compact = false }: { journey: JourneyOption; intent: JourneyIntent; compact?: boolean }) {
-  return <article className={`booking-ticket ${compact ? 'compact' : ''}`}><div className="ticket-head"><span>Selected journey</span><strong>{journey.roadLegs?.length ? `${intent.originCity} to ${intent.destinationCity}` : journey.trainName}</strong><small>{journey.roadLegs?.length ? `${journey.roadLegs.length} bus + ${journey.legs?.length ?? 1} train` : journey.legs?.length ? `${journey.legs.length} trains` : `#${journey.trainNumber}`}</small></div><RoadConnectionStrip journey={journey} compact={compact} direction="to_station" /><div className="ticket-route"><div><strong>{formatClock(journey.departureDateTime)}</strong><span>{formatDateTime(journey.departureDateTime)}</span><b>{journey.departureStation.code}</b><small>{journey.departureStation.name}</small>{!compact ? <StationInlineInfo station={journey.departureStation} trainNumber={journey.legs?.[0]?.trainNumber ?? journey.trainNumber} direction="departure" /> : null}</div><div className="ticket-duration"><span><Clock3 size={14} /> {formatDuration(journey.durationMinutes)}</span><i /><em>{journey.transfer ? `Change at ${journey.transfer.station.city}` : journey.tags.includes('overnight') ? 'Overnight' : 'Day journey'}</em></div><div><strong>{formatClock(journey.arrivalDateTime)}</strong><span>{formatDateTime(journey.arrivalDateTime)}</span><b>{journey.arrivalStation.code}</b><small>{journey.arrivalStation.name}</small>{!compact ? <StationInlineInfo station={journey.arrivalStation} trainNumber={journey.legs?.at(-1)?.trainNumber ?? journey.trainNumber} direction="arrival" /> : null}</div></div><RoadConnectionStrip journey={journey} compact={compact} direction="from_station" />{journey.legs?.length ? <div className="ticket-connection">{journey.legs.map((leg, index) => <span key={`${leg.id}-${index}`}><b>Train {index + 1}: {leg.trainName}</b><small>#{leg.trainNumber} · {formatClock(leg.departureDateTime)} {leg.departureStation.code} → {formatClock(leg.arrivalDateTime)} {leg.arrivalStation.code}</small></span>)}</div> : null}<div className="ticket-meta"><span><b>{formatTravelDate(intent.preferredDate)}</b>Date</span><span><b>{journey.classOption.code}</b>{journey.classOption.name}</span><span><b>{intent.passengerCount}</b>Travellers</span><span><b>₹{journey.totalFare.toLocaleString('en-IN')}</b>{journey.roadLegs?.length ? 'Complete fare' : 'Train fare'}</span></div></article>;
+  const trip = itineraryOverview(journey);
+  return <article className={`booking-ticket compact-booking-ticket ${compact ? 'compact' : ''}`}>
+    <div className="ticket-head"><span>Selected journey</span><strong>{trip.origin} to {trip.destination}</strong><small>{trip.segments.map(segment => segment.mode === 'bus' ? 'Bus' : 'Train').join(' + ')}</small></div>
+    <JourneyTimeline journey={journey} expanded={!compact} />
+    <div className="ticket-meta"><span><b>{journeyDate(trip.departure)}</b>Start date</span><span><b>{journey.classOption.code}</b>{journey.classOption.name}</span><span><b>{intent.passengerCount}</b>Travellers</span><span><b>₹{journey.totalFare.toLocaleString('en-IN')}</b>{journey.roadLegs?.length ? 'Complete fare' : 'Train fare'}</span></div>
+  </article>;
 }
 
 function CheckoutSteps({ current }: { current: 'travellers' | 'payment' | 'confirmed' }) {
@@ -422,7 +427,4 @@ function Confirmation({ journey, intent, details, onHome }: { journey: JourneyOp
 
 const createBookingDetails = (count: number): BookingDetails => ({ passengers: Array.from({ length: count }, () => ({ name: '', age: '', gender: '', berth: 'No preference' })), email: '', phone: '' });
 
-const formatClock = (iso: string) => new Intl.DateTimeFormat('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }).format(new Date(iso));
-const formatDateTime = (iso: string) => new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' }).format(new Date(iso));
 const formatTravelDate = (date: string) => new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${date}T00:00:00Z`));
-const formatDuration = (minutes: number) => `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, '0')}m`;

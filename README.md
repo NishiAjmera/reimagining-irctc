@@ -40,6 +40,7 @@ RailEase optimises for **time to confident choice**. AI is embedded as an intent
 - Compact expected-platform and station-facility indicators beside each boarding and arrival station
 - Optional train-only or complete bus-and-train planning for towns without railway stations
 - Nearby railhead selection, connection buffers, bus details, and combined journey fares carried through checkout
+- Compact cards with ordered bus/train segments, full-trip timing, inline priorities, and expandable journey details
 
 ## Architecture
 

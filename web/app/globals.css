@@ -615,3 +615,89 @@ input { font: inherit; color: var(--ink); }
   .selected-class-summary > span:last-child { grid-column: 1 / -1; }
   .platform-pill small { display: none; }
 }
+
+/* Compact cards: one ordered itinerary for any mix of bus and train legs. */
+.results-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.results-layout > .priority-panel { order: -1; position: static; display: block; }
+.priority-card { padding: 0; border: 0; background: none; }
+.priority-card ul { display: flex; flex-wrap: wrap; gap: 8px; }
+.priority-card li { padding: 6px 10px; border-radius: 6px; background: #eceee8; font-size: 11px; }
+.priority-card li svg { width: 13px; height: 13px; }
+.compact-journey-card { padding: 19px 22px; border-radius: 12px; box-shadow: none; }
+.compact-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.compact-card-header h3 { margin: 0; font-size: 19px; line-height: 1.3; letter-spacing: -.025em; }
+.compact-card-header > div > span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+.compact-badge { flex: 0 0 auto; padding: 5px 8px; border-radius: 5px; background: #e7f0eb; color: #126451; font-size: 10px; font-weight: 750; }
+.compact-badge.waitlist,.compact-badge.rac { background: #f8ebd8; color: #8b570e; }
+.itinerary-overview { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center; gap: 12px; padding: 18px 0 14px; }
+.itinerary-overview > div { display: grid; gap: 2px; min-width: 0; }
+.itinerary-overview strong { font-size: 24px; line-height: 1.2; letter-spacing: -.04em; }
+.itinerary-overview b { font-size: 13px; }
+.itinerary-overview small { font-size: 10px; color: var(--muted); }
+.itinerary-arrival { text-align: right; }
+.itinerary-overview .itinerary-duration { justify-items: center; gap: 3px; color: var(--muted); }
+.itinerary-duration span { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 650; }
+.itinerary-duration > svg { color: #9caeae; }
+.itinerary-segments { list-style: none; margin: 0 0 14px; padding: 9px 12px; border-radius: 8px; background: #f3f4ef; }
+.itinerary-segment { display: grid; grid-template-columns: 28px minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 6px 0; }
+.segment-mode { display: grid; justify-items: center; gap: 2px; color: var(--ink); }
+.bus .segment-mode { color: var(--teal); }
+.segment-mode small { font-size: 8px; }
+.segment-route,.segment-times { display: grid; gap: 2px; }
+.segment-route strong { font-size: 12px; line-height: 1.45; font-weight: 650; }
+.segment-route strong > span { color: #738886; }
+.segment-route small,.segment-times small { font-size: 10px; color: var(--muted); }
+.segment-times { text-align: right; }
+.segment-times strong { font-size: 12px; font-weight: 650; }
+.itinerary-transfer { display: flex; align-items: center; gap: 5px; margin: 0 0 0 38px; padding: 2px 0; color: #607b72; font-size: 10px; }
+.itinerary-transfer.tight { color: #965c16; }
+.segment-extra { margin: 2px 0 8px 38px; font-size: 11px; color: var(--muted); }
+.segment-extra p { margin: 0; line-height: 1.5; }
+.segment-stations { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 7px; }
+.segment-stations .station-inline-info { margin-top: 3px; }
+.direct-station-caption { margin: -3px 0 16px; color: var(--muted); font-size: 11px; }
+.compact-journey-card .class-picker { margin: 0; }
+.compact-journey-card .class-picker legend { margin-bottom: 7px; font-size: 10px; text-transform: none; letter-spacing: 0; color: var(--muted); }
+.compact-journey-card .class-choice-grid { gap: 8px; }
+.compact-journey-card .class-choice-grid button { min-height: 66px; padding: 10px 12px; gap: 4px 8px; }
+.compact-journey-card .class-choice-name { display: flex; align-items: baseline; gap: 6px; }
+.compact-journey-card .class-choice-name strong { font-size: 14px; }
+.compact-journey-card .class-choice-name small { font-size: 10px; }
+.compact-warning { display: flex; align-items: center; gap: 7px; margin: 10px 0 0; color: #925113; font-size: 11px; line-height: 1.45; }
+.compact-warning svg { flex-shrink: 0; }
+.compact-connection-note { margin: 9px 0 0; color: #6e746d; font-size: 10px; line-height: 1.5; }
+.compact-card-footer { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding-top: 14px; }
+.compact-details-toggle { display: flex; align-items: center; gap: 5px; padding: 8px 0; color: #536e79; font-size: 12px; }
+.compact-details-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+.compact-total { display: grid; gap: 1px; margin-left: auto; text-align: right; }
+.compact-total strong { font-size: 21px; letter-spacing: -.03em; }
+.compact-total small { color: var(--muted); font-size: 10px; }
+.compact-card-footer .choose-button { position: static; width: auto; min-height: 40px; margin: 0; padding: 10px 16px; font-size: 13px; border-radius: 8px; box-shadow: none; }
+.compact-expanded-details { padding: 12px 0 0; font-size: 12px; color: var(--muted); }
+.compact-expanded-details h4 { font-size: 12px; color: var(--ink); margin: 0 0 5px; }
+.compact-expanded-details ul { margin: 0; padding-left: 17px; line-height: 1.7; }
+.compact-booking-ticket > .compact-itinerary { padding: 0 20px; }
+.compact-booking-ticket.compact > .compact-itinerary { padding: 0 12px; }
+.compact-booking-ticket.compact .itinerary-segment { grid-template-columns: 22px 1fr; }
+.compact-booking-ticket.compact .segment-times { grid-column: 2; text-align: left; }
+@media (max-width: 720px) {
+  .compact-journey-card { padding: 16px 14px; }
+  .compact-card-header h3 { font-size: 16px; }
+  .compact-card-header { flex-wrap: wrap; gap: 7px; }
+  .compact-badge { font-size: 9px; }
+  .itinerary-overview strong { font-size: 21px; }
+  .itinerary-overview { gap: 7px; }
+  .itinerary-duration span { font-size: 10px; }
+  .itinerary-segment { grid-template-columns: 24px minmax(0,1fr); gap: 4px 8px; }
+  .segment-times { grid-column: 2; display: flex; flex-wrap: wrap; gap: 3px 8px; text-align: left; }
+  .itinerary-transfer { margin-left: 32px; padding: 5px 0; }
+  .segment-extra { margin-left: 32px; }
+  .compact-journey-card .class-choice-grid { grid-auto-flow: initial; grid-auto-columns: initial; grid-template-columns: repeat(3,minmax(0,1fr)); overflow: visible; padding: 0; }
+  .compact-journey-card .class-choice-grid button { padding: 8px; grid-template-columns: 1fr; gap: 4px; }
+  .compact-journey-card .class-choice-name small { display: none; }
+  .compact-journey-card .class-choice-fare { justify-self: start; font-size: 12px; }
+  .compact-journey-card .class-choice-status { font-size: 9px; }
+  .compact-card-footer { gap: 10px; }
+  .compact-details-toggle { font-size: 11px; }
+  .compact-card-footer .choose-button { width: 100%; }
+}

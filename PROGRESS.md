@@ -1,6 +1,6 @@
 # Project Progress
 
-Last updated: 27 August 2026
+Last updated: 28 August 2026
 
 ## Overall status
 
@@ -64,9 +64,13 @@ Last updated: 27 August 2026
 
 ## Current focus
 
+Compact journey cards now use a single travel-order timeline, including bus → train → bus journeys. Full-trip timing, transfer buffers, class choices, warnings and the complete fare stay visible; secondary details expand on demand. Priorities are inline instead of occupying a sidebar.
+
 The refreshed product is live with public-link access at [railease-journey-planner.nishiajmera21.chatgpt.site](https://railease-journey-planner.nishiajmera21.chatgpt.site). Access credentials are distributed separately and are never displayed in the UI or repository documentation.
 
 ## Verification
+
+- 17 automated tests pass, including town-to-town segment order, transfer buffers, full fare after class changes, train-only mode, and overnight timing.
 
 - Intent parser correctly extracts the primary Bengaluru → Jaipur scenario.
 - Confirmed, on-time 3A ranks above cheaper waitlisted choices.

@@ -1,17 +1,15 @@
-import { CalendarRange, CheckCircle2, Clock3, ShieldCheck, UserRound } from 'lucide-react';
+import { CalendarRange, Clock3, UserRound } from 'lucide-react';
 import type { JourneyIntent } from '@/types/journey';
 
 export function PriorityPanel({ intent }: { intent: JourneyIntent }) {
+  if (!intent.arrivalBefore && !intent.seniorTraveller && !intent.flexibilityDays) return null;
   return (
     <aside className="priority-panel" aria-label="Journey priorities">
       <div className="priority-card">
-        <p className="sidebar-label">Your priorities</p>
         <ul>
           {intent.arrivalBefore ? <li><Clock3 size={17} /> Arrive by {formatTime(intent.arrivalBefore)}</li> : null}
-          {intent.confirmedOnly ? <li><ShieldCheck size={17} /> Confirmed seats</li> : null}
           {intent.seniorTraveller ? <li><UserRound size={17} /> Senior-friendly</li> : null}
           {intent.flexibilityDays ? <li><CalendarRange size={17} /> ±{intent.flexibilityDays} day</li> : null}
-          <li><CheckCircle2 size={17} /> {intent.passengerCount} travellers</li>
         </ul>
       </div>
     </aside>

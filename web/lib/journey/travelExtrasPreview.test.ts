@@ -16,16 +16,15 @@ const renderPanel = (flow: typeof collecting) => renderToStaticMarkup(createElem
 describe('travel extras discovery', () => {
   it('names all four extras and their location without offering premature booking controls', () => {
     const html = renderToStaticMarkup(createElement(TravelExtrasPreview));
-    for (const label of ['Cabs', 'Food on train', 'Luggage assistance', 'Parcels']) expect(html).toContain(label);
-    expect(html).toContain('Travel extras after confirmation');
-    expect(html).toContain('Optional services, arranged separately from your confirmation page.');
+    for (const label of ['cabs', 'food', 'luggage help', 'parcels']) expect(html).toContain(label);
+    expect(html).toContain('Optional cabs, food, luggage help &amp; parcels on your confirmation page.');
     expect(html).not.toMatch(/<button|<a\s|<input|role="button"/);
-    expect(html.match(/aria-hidden="true"/g)).toHaveLength(4);
+    expect(html).not.toMatch(/<aside|<svg|<ul|<strong/);
+    expect(html.match(/<p\b/g)).toHaveLength(1);
   });
-  it.each([collecting, review])('previews extras before the journey card in $phase', (flow) => {
+  it.each([collecting, review])('does not repeat the results-page notice in $phase', (flow) => {
     const html = renderPanel(flow);
-    expect(html.indexOf('travel-extras-preview')).toBeGreaterThan(-1);
-    expect(html.indexOf('travel-extras-preview')).toBeLessThan(html.indexOf('chat-booking-journey'));
+    expect(html).not.toContain('travel-extras-preview');
     expect(html).not.toContain('class="travel-service-options"');
   });
   it('replaces the preview with the actual extras on confirmation', () => {

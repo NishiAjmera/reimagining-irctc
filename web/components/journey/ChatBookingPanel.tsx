@@ -5,7 +5,6 @@ import type { JourneyIntent } from '@/types/journey';
 import { berths, genders, type BookingDetails, type BookingFlow, type PassengerDetails } from '@/lib/chat/bookingFlow';
 import { JourneyTimeline } from './JourneyTimeline';
 import { TravelServices } from './TravelServices';
-import { TravelExtrasPreview } from './TravelExtrasPreview';
 
 export function ChatBookingPanel({ flow, intent, busy, onChange, onReview, onBack }: { flow: BookingFlow; intent: JourneyIntent; busy: boolean; onChange: (details: BookingDetails) => void; onReview: () => void; onBack: () => void }) {
   const { journey, details, phase } = flow;
@@ -17,7 +16,6 @@ export function ChatBookingPanel({ flow, intent, busy, onChange, onReview, onBac
     {phase !== 'completed' ? <button className="back-link" type="button" onClick={onBack}><ArrowLeft size={15} /> Change journey</button> : null}
     <ol className="chat-booking-steps" aria-label="Booking progress">{['Travellers', 'Review', 'Summary'].map((label, index) => <li key={label} aria-current={index === (phase === 'collecting' ? 0 : phase === 'review' ? 1 : 2) ? 'step' : undefined}><span>{index < (phase === 'collecting' ? 0 : phase === 'review' ? 1 : 2) ? <Check size={13} /> : index + 1}</span>{label}</li>)}</ol>
     <div className="chat-booking-heading"><p className="section-label">{phase === 'completed' ? 'Journey summary' : 'Your selected journey'}</p><h2>{phase === 'completed' ? 'Your journey is ready.' : phase === 'review' ? 'One final check' : 'Who’s travelling?'}</h2><p>{phase === 'collecting' ? 'Share details in chat, or enter them here.' : phase === 'review' ? 'Check every detail before confirming in chat.' : `${intent.originCity} → ${intent.destinationCity}`}</p></div>
-    {phase !== 'completed' ? <TravelExtrasPreview /> : null}
     <article className="chat-booking-journey"><header><div><h3>{journey.trainName}</h3><span>#{journey.trainNumber} · {journey.classOption.code} · {journey.classOption.name}</span></div><strong className={journey.classOption.status === 'CONFIRMED' ? 'status-confirmed' : 'status-warning'}>{journey.classOption.status === 'CONFIRMED' ? 'Confirmed seats' : `${journey.classOption.status === 'WAITLIST' ? 'WL' : 'RAC'} ${journey.classOption.position ?? ''}`}</strong></header><JourneyTimeline journey={journey} expanded /></article>
     {journey.classOption.status !== 'CONFIRMED' ? <p className="chat-booking-warning" role="note">{journey.classOption.status === 'WAITLIST' ? 'This journey is waitlisted. A seat is not confirmed.' : 'RAC does not guarantee a full berth.'} Confirm only if you accept this availability.</p> : null}
     {phase === 'collecting' ? <form className="chat-booking-form" onSubmit={(event) => { event.preventDefault(); onReview(); }}>

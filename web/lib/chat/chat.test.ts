@@ -116,20 +116,20 @@ describe('cost controls', () => {
 });
 
 describe('paid endpoint protection', () => {
-  it('allows explicit local development but rejects production local bypass', () => {
-    expect(chatIdentity(httpRequest(), { NODE_ENV: 'development', GEMINI_CHAT_ACCESS: 'local' })).toBe('local-preview');
-    expect(() => chatIdentity(httpRequest(), { NODE_ENV: 'production', GEMINI_CHAT_ACCESS: 'local' })).toThrow();
-    expect(() => chatIdentity(httpRequest(), { NODE_ENV: 'development' })).toThrow();
-    expect(() => chatIdentity(httpRequest({}, 'http://localhost:3000/api/chat', 'https://attacker.test'), { NODE_ENV: 'development', GEMINI_CHAT_ACCESS: 'local' })).toThrow();
+  it('allows explicit local development but rejects production local bypass', async () => {
+    await expect(chatIdentity(httpRequest(), { NODE_ENV: 'development', GEMINI_CHAT_ACCESS: 'local' })).resolves.toBe('local-preview');
+    await expect(chatIdentity(httpRequest(), { NODE_ENV: 'production', GEMINI_CHAT_ACCESS: 'local' })).rejects.toThrow();
+    await expect(chatIdentity(httpRequest(), { NODE_ENV: 'development' })).rejects.toThrow();
+    await expect(chatIdentity(httpRequest({}, 'http://localhost:3000/api/chat', 'https://attacker.test'), { NODE_ENV: 'development', GEMINI_CHAT_ACCESS: 'local' })).rejects.toThrow();
   });
-  it('requires a platform-authenticated allowlisted identity in Sites mode', () => {
+  it('requires a platform-authenticated allowlisted identity in Sites mode', async () => {
     const req = httpRequest();
     const env = { GEMINI_CHAT_ACCESS: 'sites', GEMINI_ALLOWED_USER_IDS: 'user-1' };
-    expect(() => chatIdentity(req, env)).toThrow();
+    await expect(chatIdentity(req, env)).rejects.toThrow();
     req.headers.set('oai-authenticated-user-id', 'user-2');
-    expect(() => chatIdentity(req, env)).toThrow();
+    await expect(chatIdentity(req, env)).rejects.toThrow();
     req.headers.set('oai-authenticated-user-id', 'user-1');
-    expect(chatIdentity(req, env)).toBe('sites:user-1');
+    await expect(chatIdentity(req, env)).resolves.toBe('sites:user-1');
   });
   it('bounds the streamed request body', async () => {
     await expect(readChatBody(httpRequest({ text: 'x'.repeat(33000) }))).rejects.toMatchObject({ status: 413 });

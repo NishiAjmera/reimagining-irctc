@@ -4,9 +4,9 @@ Last updated: 28 August 2026
 
 ## Overall status
 
-**Release 21 published; hosted Gemini secret applied, live-chat authorization still to configure**
+**Demo-account chat sessions implemented; validation and publication in progress**
 
-Release 21 was published successfully on 28 August 2026 from Site source `1f1f655` (matching GitHub app source at `15cfbf5`). The deployment applied environment revision 2, including the user-configured secret `GEMINI_API_KEY`. `GEMINI_CHAT_ACCESS` and `GEMINI_ALLOWED_USER_IDS` remain unset, so paid chat remains fail-closed; no access policy was weakened. Public Site access is unchanged. Luggage assistance now uses “Book assistance”, “Assistance booked” and “Reserved” for its local simulated state, with distinct masked phone labels and reserved-domain email contacts at each station. Contact actions cannot reach unrelated people. All 95 tests, typecheck, lint and the production build passed; publishing reused that exact validated build.
+The existing `demo@railease.in` login now verifies credentials server-side and creates a signed eight-hour session. Hosted environment revision 3 enables chat for that session while preserving the Gemini secret and public Site access. No credentials are displayed or embedded in the client. Same-origin checks, cookie expiry, password-attempt throttling, and a shared-account chat budget protect the paid endpoint. All 105 automated tests, typecheck, lint and production build pass; 69 build artifacts contain none of the configured secrets. Publication is next; release 21 remains live until then. The previous luggage changes are preserved.
 
 ## Milestones
 

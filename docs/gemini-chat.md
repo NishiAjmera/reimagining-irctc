@@ -1,6 +1,6 @@
 # Gemini journey chat
 
-Status: release 21 published on 28 August 2026 with the user-configured hosted Gemini secret (environment revision 2). Live multi-turn extraction and search regressions pass locally. Hosted paid chat remains locked because `GEMINI_CHAT_ACCESS` and `GEMINI_ALLOWED_USER_IDS` are not yet configured; user approval of permitted chat identities and sign-in wiring is still needed. Public Site access is unchanged.
+Status: server-verified sessions added for the existing `demo@railease.in` account, at the user's request. Hosted environment revision 3 enables `demo_session` and stores the password verifier and session signing key as secrets. Publication and live session checks are pending. Public Site access is unchanged.
 
 ## Local setup
 
@@ -8,10 +8,12 @@ Create `web/.env.local` using the entries in `web/.env.example`:
 
 ```dotenv
 GEMINI_API_KEY=your_key_here
-GEMINI_CHAT_ACCESS=local
+GEMINI_CHAT_ACCESS=demo_session
+RAIL_SESSION_SECRET=your_64_character_random_hex_secret
+RAIL_LOGIN_PASSWORD_VERIFIER=v1:your_32_character_salt_hex:your_64_character_proof_hex
 ```
 
-Use a dedicated Gemini project/key for this application. Keep the key in this ignored server-side file, not in chat, source control, browser storage, or a `NEXT_PUBLIC_`/`VITE_` variable. Restart the local dev server after changing it. The existing product login is unchanged. No new dependency is required.
+Use a dedicated Gemini project/key for this application. Keep secrets in this ignored server-side file, not in chat, source control, browser storage, or a `NEXT_PUBLIC_`/`VITE_` variable. Restart the local dev server after changing it. The existing login screen and password are preserved; verification now happens on the server. No new dependency is required. Local `GEMINI_CHAT_ACCESS=local` is still available for the opt-in HTTP regression script, but never works in production.
 
 The default model is pinned to `gemini-3.7-flash`. Requests use the Gemini Interactions REST API, structured JSON output and low thinking. No sampling parameters removed from this model are sent. Each request is a fresh, bounded snapshot with `store: false`, rather than replaying Gemini thought/signature steps or retaining provider conversation IDs.
 
@@ -36,13 +38,17 @@ The default model is pinned to `gemini-3.7-flash`. Requests use the Gemini Inter
 
 ## Public access gate
 
-The existing browser-only login is **not** trusted to authorize paid Gemini calls. `local` access works only in development on a loopback URL and is rejected in production. Same-origin JSON requests are required.
+`GEMINI_CHAT_ACCESS=demo_session` allows paid chat only after `/api/session` verifies both the existing email and password. The server issues a signed eight-hour, HttpOnly, SameSite=Strict cookie; HTTPS uses a Secure, host-only `__Host-` cookie. Refresh restores the session; sign-out clears the browser cookie. Cookies are bound to the site's origin and verified on each chat request. Email fields and arbitrary identity headers cannot grant access. Login and chat require same-origin requests; all session responses are `no-store`.
 
-For deployment on Sites, configure `GEMINI_CHAT_ACCESS=sites` and `GEMINI_ALLOWED_USER_IDS` with explicitly allowed platform-authenticated user IDs. The API validates the Sites-owned `oai-authenticated-user-id` header. Anonymous/non-allowlisted users are rejected. This mode must only run behind the Sites dispatcher, not a proxy that forwards arbitrary client identity headers. The current public site's UI login does not create this platform identity; configure/test platform sign-in and allowlisting before enabling paid chat. Release 21 has the hosted secret, but these access settings remain unset. In post-deployment checks, unauthenticated chat returned the expected HTTP 403 ACCESS_REQUIRED; the site returned HTTP 200. No authentication policy was changed.
+`RAIL_SESSION_SECRET` is 32 cryptographically random bytes encoded as lowercase hex. `RAIL_LOGIN_PASSWORD_VERIFIER` is `v1:<16-byte salt hex>:<32-byte proof hex>`: PBKDF2-SHA256, 100,000 iterations, using the raw SHA256(password) bytes as input. This permits migration from the old browser digest without learning or changing the password. Neither digest nor verifier is included in the new client bundle. The old digest remains in Git history and prior releases: rotate the shared password before broader use, and rotate the signing key at the same time to invalidate all sessions. Stateless sign-out clears the caller's cookie, not copies of previously stolen tokens; key rotation revokes all tokens.
+
+The shared account has one identity for request limits regardless of browser/session count. Login is limited to 20 attempts/minute per instance. These limits are not distributed; deploy a durable limiter/managed identity provider before broader access. Existing Gemini response caching, coalescing and call limits remain unchanged. Keep credentials private and share them separately.
+
+The alternative `sites` mode still validates an allowlisted Sites-owned `oai-authenticated-user-id` header using `GEMINI_ALLOWED_USER_IDS`; do not enable it behind a proxy that forwards user-supplied identity headers. It is not needed for the shared RailEase login. `local` remains loopback-development-only. Missing/invalid sessions fail closed before a provider request.
 
 ## Verification and key-based acceptance checks
 
-95 automated tests pass, covering complete-state extraction, corrections/clearing, missing details, both-town mode selection, Indian dates/times, preferred class and arrival deadlines, search API validation, full-itinerary budget enforcement, provider errors/timeouts, cache coalescing/expiry/isolation, throttling, access checks and safe sample luggage contacts. Typecheck, lint and production build pass.
+105 automated tests pass, covering the existing extraction/search/cost controls plus login credential verification, cookie attributes, reload/logout, expiry, tampering, origin binding, secret rotation, throttling, unauthenticated provider denial, and a successful sign-in → mocked Gemini turn → cache-hit flow. Typecheck, lint and production build pass. All 69 build artifacts were checked against the configured secret values, with no matches. Deployment is pending for this update.
 
 The opt-in live regression runs six sequential Gemini turns: town-to-town planning, bus connections and budget, passenger/class/time corrections, authoritative manual edits with a question-only turn, clearing preferences, and replacing both route ends. It then calls the actual train-search endpoint and verifies that matching results honor the captured fields. A concurrent duplicate returned the same validated reply with one provider call and an application cache hit. Short live requests reported zero provider-cached tokens; implicit-cache savings are not claimed.
 

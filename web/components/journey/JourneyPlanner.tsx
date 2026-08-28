@@ -24,11 +24,6 @@ type DataSource = 'sample' | 'railradar';
 type PassengerDetails = { name: string; age: string; gender: string; berth: string };
 type BookingDetails = { passengers: PassengerDetails[]; email: string; phone: string };
 
-const ACCESS_DIGESTS = {
-  email: '52d650d5ee686b8a810429e5ef84cc994c011659eb6018e37ec15962b4d260ca',
-  password: '81fae0181799f34c87ac3c4e6315b7a071d9070788f0f0948cdf22c4e9c150c1',
-} as const;
-
 export const DEMO_PROMPT = "I need to travel from Bengaluru to Jaipur next Friday for a wedding. I need to reach by 4 PM. We’re three people including my mother, and I don’t want a waitlisted ticket.";
 
 const emptyStructured = { origin: '', destination: '', date: '', passengers: 1 };
@@ -36,6 +31,8 @@ const emptyStructured = { origin: '', destination: '', date: '', passengers: 1 }
 export function JourneyPlanner() {
   const [stage, setStage] = useState<Stage>('home');
   const [authenticated, setAuthenticated] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [sessionError, setSessionError] = useState('');
   const [mode, setMode] = useState<SearchMode>('describe');
   const [query, setQuery] = useState('');
   const [structured, setStructured] = useState(emptyStructured);
@@ -45,6 +42,15 @@ export function JourneyPlanner() {
   const [error, setError] = useState('');
   const [mobileNav, setMobileNav] = useState(false);
   useEffect(() => { track('journey_started'); }, []);
+  useEffect(() => {
+    let active = true;
+    fetch('/api/session', { cache: 'no-store', signal: AbortSignal.timeout(10000) })
+      .then(async (response) => response.ok ? await response.json() as { authenticated?: boolean } : null)
+      .then((session) => { if (active) setAuthenticated(session?.authenticated === true); })
+      .catch(() => {})
+      .finally(() => { if (active) setCheckingSession(false); });
+    return () => { active = false; };
+  }, []);
 
   const submitAI = () => {
     if (!query.trim()) { setError('Tell us where you want to go—or use the journey example.'); return; }
@@ -68,11 +74,20 @@ export function JourneyPlanner() {
 
   const tryDemo = () => { setMode('describe'); setQuery(DEMO_PROMPT); setError(''); document.getElementById('journey-query')?.focus(); };
   const reset = () => { setStage('home'); setIntent(null); setSelected(null); setBookingDetails(null); setError(''); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const signOut = async () => {
+    setSessionError('');
+    try {
+      const response = await fetch('/api/session', { method: 'DELETE', signal: AbortSignal.timeout(10000) });
+      if (!response.ok) throw new Error('Sign-out failed');
+      reset(); setQuery(''); setStructured(emptyStructured); setAuthenticated(false);
+    } catch { setSessionError('Unable to sign out. Please try again.'); }
+  };
 
   return (
     <main className="min-h-screen bg-cream text-ink">
-      {!authenticated ? <DemoLogin onSuccess={() => setAuthenticated(true)} /> : null}
-      {authenticated ? <Header onHome={reset} onSignOut={() => { reset(); setAuthenticated(false); }} mobileOpen={mobileNav} setMobileOpen={setMobileNav} /> : null}
+      {checkingSession ? <section className="login-screen" role="status">Opening RailEase…</section> : !authenticated ? <DemoLogin onSuccess={() => setAuthenticated(true)} /> : null}
+      {authenticated ? <Header onHome={reset} onSignOut={signOut} mobileOpen={mobileNav} setMobileOpen={setMobileNav} /> : null}
+      {sessionError ? <p className="form-error" role="alert">{sessionError}</p> : null}
       {authenticated ? <>
       {stage === 'home' ? <HomeSearch mode={mode} setMode={setMode} query={query} setQuery={setQuery} structured={structured} setStructured={setStructured} error={error} tryDemo={tryDemo} submitAI={submitAI} submitStructured={submitStructured} /> : null}
       {stage !== 'home' ? <div hidden={stage !== 'chat'}><ConversationWorkspace initialQuery={mode === 'describe' ? query : ''} initialIntent={mode === 'structured' ? intent : null} onIntentChange={setIntent} onChoose={choose} /></div> : null}
@@ -88,19 +103,20 @@ function DemoLogin({ onSuccess }: { onSuccess: () => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [pending, setPending] = useState(false);
   const signIn = async (event: React.FormEvent) => {
     event.preventDefault();
-    const [emailDigest, passwordDigest] = await Promise.all([digest(email.trim().toLowerCase()), digest(password)]);
-    if (emailDigest === ACCESS_DIGESTS.email && passwordDigest === ACCESS_DIGESTS.password) { setLoginError(''); onSuccess(); return; }
-    setLoginError('Incorrect email or password.');
+    if (pending) return;
+    setPending(true); setLoginError('');
+    try {
+      const response = await fetch('/api/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }), signal: AbortSignal.timeout(10000) });
+      const session = await response.json() as { authenticated?: boolean; error?: string };
+      if (!response.ok || session.authenticated !== true) { setLoginError(typeof session.error === 'string' ? session.error : 'Unable to sign in. Please try again.'); return; }
+      setPassword(''); onSuccess();
+    } catch { setLoginError('Unable to sign in. Please try again.'); }
+    finally { setPending(false); }
   };
-  return <section className="login-screen"><div className="login-brand"><span className="brand-mark"><TrainFront size={22} /></span><strong>RailEase</strong></div><div className="login-layout"><div className="login-copy"><p>Rail journey planning</p><h1>Plan your train journey with fewer decisions.</h1><span>Compare practical options by timing, availability, comfort and fare.</span></div><form className="login-card" onSubmit={signIn}><div className="login-icon"><LockKeyhole size={21} /></div><h2>Welcome back</h2><p>Sign in to continue.</p><label>Email<input type="email" autoComplete="username" value={email} onChange={(event) => setEmail(event.target.value)} required /></label><label>Password<input type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>{loginError ? <p className="form-error" role="alert">{loginError}</p> : null}<button className="primary-button login-submit" type="submit">Sign in <ArrowRight size={17} /></button></form></div></section>;
-}
-
-async function digest(value: string) {
-  const bytes = new TextEncoder().encode(value);
-  const hash = await crypto.subtle.digest('SHA-256', bytes);
-  return Array.from(new Uint8Array(hash), (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return <section className="login-screen"><div className="login-brand"><span className="brand-mark"><TrainFront size={22} /></span><strong>RailEase</strong></div><div className="login-layout"><div className="login-copy"><p>Rail journey planning</p><h1>Plan your train journey with fewer decisions.</h1><span>Compare practical options by timing, availability, comfort and fare.</span></div><form className="login-card" onSubmit={signIn}><div className="login-icon"><LockKeyhole size={21} /></div><h2>Welcome back</h2><p>Sign in to continue.</p><label>Email<input type="email" autoComplete="username" value={email} onChange={(event) => setEmail(event.target.value)} required maxLength={254} /></label><label>Password<input type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required maxLength={256} /></label>{loginError ? <p className="form-error" role="alert">{loginError}</p> : null}<button className="primary-button login-submit" type="submit" disabled={pending}>{pending ? 'Signing in…' : 'Sign in'} <ArrowRight size={17} /></button></form></div></section>;
 }
 
 function Header({ onHome, onSignOut, mobileOpen, setMobileOpen }: { onHome: () => void; onSignOut: () => void; mobileOpen: boolean; setMobileOpen: (open: boolean) => void }) {

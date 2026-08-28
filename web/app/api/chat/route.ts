@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new ChatServiceError(503, 'NOT_CONFIGURED', 'Chat is temporarily unavailable. You can continue with trip details.');
-    const identity = chatIdentity(request, process.env);
+    const identity = await chatIdentity(request, process.env);
     const body = await readChatBody(request);
     let input;
     try { input = validateChatRequest(body); } catch { throw new ChatServiceError(400, 'INVALID_REQUEST', 'Please check your message and trip details.'); }

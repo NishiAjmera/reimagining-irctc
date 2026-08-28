@@ -689,6 +689,55 @@ input { font: inherit; color: var(--ink); }
 .compact-booking-ticket.compact > .compact-itinerary { padding: 0 12px; }
 .compact-booking-ticket.compact .itinerary-segment { grid-template-columns: 22px 1fr; }
 .compact-booking-ticket.compact .segment-times { grid-column: 2; text-align: left; }
+
+/* Optional post-booking services: compact shortcuts with one detail panel. */
+.travel-services { margin-top: 28px; text-align: left; }
+.travel-services-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.travel-services-heading h2 { margin: 0; font-size: 21px; letter-spacing: -.025em; }
+.travel-services-heading > span { color: var(--muted); font-size: 11px; }
+.travel-service-options { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; }
+.travel-service-options > button { display: flex; align-items: center; gap: 10px; min-height: 80px; padding: 16px 12px; border: 0; border-radius: 10px; background: #eeeae1; color: var(--ink); text-align: left; cursor: pointer; }
+.travel-service-options > button > svg:first-child { flex-shrink: 0; color: var(--teal); }
+.travel-service-options > button > svg:last-child { margin-left: auto; flex-shrink: 0; color: var(--muted); }
+.travel-service-options > button > span { min-width: 0; display: grid; gap: 4px; }
+.travel-service-options strong { font-size: 12px; font-weight: 700; }
+.travel-service-options small { font-size: 10px; color: var(--muted); }
+.travel-service-options > button:hover, .travel-service-options > button[aria-expanded="true"] { background: #e0ece7; }
+.travel-service-options > button[aria-expanded="true"] > svg:last-child { transform: rotate(90deg); }
+.travel-services button:focus-visible, .travel-services a:focus-visible, .travel-services select:focus-visible, .travel-services textarea:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+.travel-service-panel { margin-top: 12px; padding: 20px; border-radius: 10px; background: var(--paper); }
+.travel-service-panel[hidden] { display: none; }
+.service-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.service-panel-heading h3 { margin: 0; font-size: 16px; }
+.service-close { display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 50%; background: #f0eee8; color: var(--muted); cursor: pointer; }
+.service-context-row { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; }
+.service-context-row label { min-width: 0; display: grid; gap: 5px; color: var(--muted); font-size: 10px; }
+.service-context-row select { max-width: 100%; min-height: 38px; padding: 8px 30px 8px 10px; border: 1px solid #d3d8d2; border-radius: 6px; background: var(--paper); color: var(--ink); font-size: 12px; }
+.service-location { display: grid; gap: 4px; }
+.service-location strong { font-size: 13px; }
+.service-location small, .service-location > span { font-size: 11px; color: var(--muted); }
+.travel-service-panel p { margin: 14px 0; max-width: 720px; font-size: 12px; color: var(--muted); line-height: 1.65; }
+.service-links { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.service-links a, .service-copy button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 9px 12px; border: 0; border-radius: 6px; background: #eaf0ed; color: var(--ink); font-size: 12px; font-weight: 650; text-decoration: none; cursor: pointer; }
+.service-links a:hover, .service-copy button:hover { background: #dce9e2; }
+.service-copy { display: inline-grid; gap: 5px; }
+.service-copy textarea { width: 100%; min-height: 90px; padding: 8px; font-size: 12px; border: 1px solid #d3d8d2; border-radius: 6px; }
+.service-copy-error { font-size: 11px; color: #a3332a; }
+.service-footnote { display: block; margin-top: 10px; font-size: 10px; color: var(--muted); line-height: 1.5; }
+.service-train-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.service-train-tags > span { padding: 7px 10px; border-radius: 6px; background: #f2f0e9; font-size: 12px; }
+.service-train-tags small { color: var(--muted); }
+.travel-services-note { margin: 11px 0 0; color: var(--muted); font-size: 10px; line-height: 1.6; }
+@media (max-width: 800px) { .travel-service-options { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 480px) {
+  .travel-service-options { gap: 8px; }
+  .travel-service-options > button { padding: 12px 9px; gap: 8px; }
+  .travel-service-options > button > svg:last-child { display: none; }
+  .travel-service-panel { padding: 16px; }
+  .service-context-row { align-items: stretch; gap: 12px; }
+  .service-context-row > label:not(.service-bags), .service-context-row > .service-location { flex-basis: 100%; }
+  .service-links { align-items: stretch; flex-direction: column; }
+}
 @media (max-width: 720px) {
   .compact-journey-card { padding: 16px 14px; }
   .compact-card-header h3 { font-size: 16px; }

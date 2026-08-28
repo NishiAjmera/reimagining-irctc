@@ -15,6 +15,7 @@ import { IndirectJourneyCard } from './IndirectJourneyCard';
 import { PriorityPanel } from './PriorityPanel';
 import { RailChatIcon } from './RailChatIcon';
 import { JourneyTimeline } from './JourneyTimeline';
+import { TravelServices } from './TravelServices';
 import { itineraryOverview, journeyDate } from '@/lib/journey/itinerary';
 import { JourneyModePicker } from './JourneyModePicker';
 import { hasRoadConnection, resolveRailCity } from '@/lib/data/locations';
@@ -422,7 +423,7 @@ function Payment({ journey, intent, details, onBack, onPaid }: { journey: Journe
 
 function Confirmation({ journey, intent, details, onHome }: { journey: JourneyOption; intent: JourneyIntent; details: BookingDetails; onHome: () => void }) {
   const reference = `RE${journey.trainNumber.slice(-4)}${intent.passengerCount}X`;
-  return <section className="confirmation-screen screen-shell"><CheckoutSteps current="confirmed" /><div className="confirmation-mark"><TicketCheck size={36} /></div><p className="screen-kicker">Booking confirmed</p><h1>Your journey is booked.</h1><p>Trip details have been sent to {details.email}.</p><div className="confirmation-reference"><span>Booking reference</span><strong>{reference}</strong><small>Sample reference · no payment was charged</small></div><SelectedJourney journey={journey} intent={intent} /><div className="confirmation-actions"><button className="primary-button" type="button" onClick={onHome}>Plan another journey</button></div></section>;
+  return <section className="confirmation-screen screen-shell"><CheckoutSteps current="confirmed" /><div className="confirmation-mark"><TicketCheck size={36} /></div><p className="screen-kicker">Booking confirmed</p><h1>Your journey is booked.</h1><p>Booking contact: {details.email}</p><div className="confirmation-reference"><span>Booking reference</span><strong>{reference}</strong><small>Sample reference · no payment was charged</small></div><SelectedJourney journey={journey} intent={intent} /><TravelServices journey={journey} /><div className="confirmation-actions"><button className="primary-button" type="button" onClick={onHome}>Plan another journey</button></div></section>;
 }
 
 const createBookingDetails = (count: number): BookingDetails => ({ passengers: Array.from({ length: count }, () => ({ name: '', age: '', gender: '', berth: 'No preference' })), email: '', phone: '' });

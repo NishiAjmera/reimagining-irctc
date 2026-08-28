@@ -64,6 +64,8 @@ Last updated: 28 August 2026
 
 ## Current focus
 
+Local preview awaiting review: booking-confirmation Travel extras for Ola/Uber cab handoffs, Swiggy Food on Train, station Sahayak assistance details and railway/Porter goods services. Context follows direct, connecting and bus–train–bus journeys. External bookings remain with providers; no personal details or sample PNRs are sent. No service is falsely marked reserved. See `docs/travel-services.md` for integration boundaries and official sources.
+
 The original compact icon-only station facility row now includes cloakroom, lockers and Divyangjan facilities, with sample availability requested for the prototype. Unavailable facilities remain greyed out. Short custom tooltips explain each icon and its status on hover, keyboard focus or tap; no expanding notes or extra information panels. Escape dismisses tooltips. Unknown stations retain the unverified fallback.
 
 Compact journey cards now use a single travel-order timeline, including bus → train → bus journeys. Full-trip timing, transfer buffers, class choices, warnings and the complete fare stay visible; secondary details expand on demand. Priorities are inline instead of occupying a sidebar.
@@ -72,7 +74,7 @@ The refreshed product is live with public-link access at [railease-journey-plann
 
 ## Verification
 
-- 21 automated tests cover town-to-town segment order, transfer buffers, full fare after class changes, train-only mode, overnight timing, sample facility data, linked tooltips, greyed-out unavailable facilities, and the unknown-station fallback.
+- 27 automated tests pass, covering itinerary ordering and fares, station facilities and tooltips, and travel-service context, safe provider links, cross-station assistance and onward-bus pickup. Typecheck, lint and production build pass for the local travel-services update.
 
 - Intent parser correctly extracts the primary Bengaluru → Jaipur scenario.
 - Confirmed, on-time 3A ranks above cheaper waitlisted choices.

@@ -72,6 +72,6 @@ describe('post-booking travel services', () => {
     expect(html.match(/target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer"/g)).toHaveLength(5);
     for (const match of html.matchAll(/aria-controls="([^"]+)"/g)) expect(html).toContain(`id="${match[1]}"`);
     expect(html).toContain('sample reference is not a railway PNR');
-    expect(html).toContain('no porter has been reserved');
+    expect(html).toContain('Sample booking only. No payment or porter dispatch.');
   });
 });

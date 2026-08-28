@@ -1,12 +1,12 @@
 # Booking-confirmation service handoffs
 
-The confirmation screen offers four optional services without changing the journey fare or placing additional orders. This is a provider-handoff integration, not a provider booking API. No passenger, contact, payment or sample booking-reference data is transmitted by RailEase; external links use `noreferrer`. Clipboard copies require an explicit user click and contain only the displayed location or assistance details.
+The confirmation screen offers four optional services without changing the journey fare or placing real additional orders. Cab, food and parcel services use provider handoffs, not booking APIs. Luggage assistance has an explicitly simulated in-app booking flow. No passenger, contact, payment or sample booking-reference data is transmitted by RailEase; external links use `noreferrer`. Location clipboard copies require an explicit user click.
 
 ## Current behavior
 
 - **Cabs:** official Ola and Uber booking entry points. Travellers can copy the actual arrival/boarding station location; town-to-town journeys also offer the final bus stop. Pickup time and destination must be entered and confirmed with the provider. No invented coordinates, fare estimates or scheduled reservations.
 - **Food:** Swiggy Food on Train. A real railway PNR must be entered on Swiggy; the generated RailEase reference is not forwarded or treated as a PNR. Coverage and menu availability are decided by Swiggy.
-- **Luggage assistance:** local planning details for boarding, train changes or arrival. Defaults to the transfer station for indirect journeys. Copy details for a licensed station Sahayak or contact railway enquiries on 139. No porter is reserved or dispatched. Cross-station transfers are explicitly distinguished from platform changes.
+- **Luggage assistance:** select departure, arrival, or both, plus optional same-station train changes. Each selected stop has an independent count of 1–8 bags, priced at a sample ₹80 per bag per station. A local booking confirmation snapshots the total, assigns fictional porter names, and displays illustrative station meeting landmarks and times (30 minutes before departure, or at arrival). Cancellation returns to the editable selection. Closing and reopening the panel preserves the state; reloading the page or starting a new journey does not. No payment, reservation or porter dispatch takes place. Cross-station transport is excluded rather than sold as platform assistance.
 - **Parcels:** official Indian Railways parcel portal and Porter goods-services handoffs. Packing, weight, coverage, rates and dispatch timing are confirmed with the provider. Porter goods transport is not presented as an in-station porter service. The rail portal was linked from official railway resources but did not render through the research browser; 139 is shown as a fallback for parcel enquiries.
 
 ## Primary references checked 28 August 2026

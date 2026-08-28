@@ -64,7 +64,7 @@ Last updated: 28 August 2026
 
 ## Current focus
 
-Local preview awaiting review: booking-confirmation Travel extras for Ola/Uber cab handoffs, Swiggy Food on Train, station Sahayak assistance details and railway/Porter goods services. Context follows direct, connecting and bus–train–bus journeys. External bookings remain with providers; no personal details or sample PNRs are sent. No service is falsely marked reserved. See `docs/travel-services.md` for integration boundaries and official sources.
+Travel extras includes cab, food and parcel provider handoffs plus mock luggage booking at departure, arrival, or both, with optional same-station transfers, per-stop bag counts and sample ₹80-per-bag pricing. Confirmation shows fictional porter names, meeting landmarks and times; cancellation returns to the editable form. No charge, dispatch or external reservation occurs for luggage assistance. The provider handoffs were committed separately as `809507f`. See `docs/travel-services.md` for integration boundaries.
 
 The original compact icon-only station facility row now includes cloakroom, lockers and Divyangjan facilities, with sample availability requested for the prototype. Unavailable facilities remain greyed out. Short custom tooltips explain each icon and its status on hover, keyboard focus or tap; no expanding notes or extra information panels. Escape dismisses tooltips. Unknown stations retain the unverified fallback.
 
@@ -74,7 +74,7 @@ The refreshed product is live with public-link access at [railease-journey-plann
 
 ## Verification
 
-- 27 automated tests pass, covering itinerary ordering and fares, station facilities and tooltips, and travel-service context, safe provider links, cross-station assistance and onward-bus pickup. Typecheck, lint and production build pass for the local travel-services update.
+- 35 automated tests pass, covering itinerary ordering and fares, station facilities and tooltips, travel-service handoffs, and mock luggage pricing, both-end and arrival-only bookings, assignments, meeting times, snapshot stability and invalid selections. Typecheck, lint and production build pass for the luggage-booking update.
 
 - Intent parser correctly extracts the primary Bengaluru → Jaipur scenario.
 - Confirmed, on-time 3A ranks above cheaper waitlisted choices.

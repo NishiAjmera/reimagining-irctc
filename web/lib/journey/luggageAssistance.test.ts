@@ -27,6 +27,7 @@ describe('mock luggage assistance booking', () => {
     selection.arrival = { selected: true, bags: 1 };
     const booking = createMockLuggageBooking(stops, selection);
     expect(booking.sample).toBe(true);
+    expect(booking.status).toBe('reserved');
     expect(booking.total).toBe(320);
     expect(booking.assignments.map((item) => item.amount)).toEqual([240, 80]);
     expect(new Set(booking.assignments.map((item) => item.porterName)).size).toBe(2);
@@ -89,7 +90,8 @@ describe('mock luggage assistance booking', () => {
     expect(html).toContain('Select both ends');
     expect(html).toContain('₹80');
     expect(html).toContain('per bag, per station');
-    expect(html).toContain('Review assistance');
+    expect(html).toContain('Book assistance');
+    expect(html).not.toContain('Review assistance');
     expect(html).toContain('Provider confirmation is required');
     expect(html).not.toContain('Ask station staff');
     const visibleText = html.replace(/<[^>]*>/g, '');
@@ -97,10 +99,28 @@ describe('mock luggage assistance booking', () => {
   });
 
   it('does not invent a callable porter number', () => {
-    const html = renderToStaticMarkup(createElement(PorterContactDetails));
+    const booking = createMockLuggageBooking(stops, initialLuggageSelection(stops));
+    const contact = booking.assignments[0].contact;
+    const html = renderToStaticMarkup(createElement(PorterContactDetails, { contact }));
     expect(html).toContain('Contact details');
-    expect(html).toContain('Direct number unavailable until confirmed');
+    expect(html).toContain(contact.phoneLabel);
+    expect(html).toContain(contact.email);
     expect(html).toContain('disabled=""');
+    expect(html).not.toContain('mailto:');
     expect([...html.matchAll(/href="(tel:[^"]+)"/g)].map((match) => match[1])).toEqual(['tel:139']);
+  });
+
+  it('keeps endpoint contacts distinct, stable and non-routable', () => {
+    const selection = initialLuggageSelection(stops);
+    selection.arrival.selected = true;
+    const booking = createMockLuggageBooking(stops, selection);
+    const contacts = booking.assignments.map((item) => item.contact);
+    expect(new Set(contacts.map((item) => item.phoneLabel)).size).toBe(2);
+    expect(new Set(contacts.map((item) => item.email)).size).toBe(2);
+    for (const contact of contacts) {
+      expect(contact.phoneLabel).toMatch(/^\+91 9XXXX X\d{4}$/);
+      expect(contact.email).toMatch(/@railease\.example$/);
+    }
+    expect(createMockLuggageBooking(stops, selection).assignments.map((item) => item.contact)).toEqual(contacts);
   });
 });

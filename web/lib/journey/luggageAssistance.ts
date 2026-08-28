@@ -5,10 +5,12 @@ export const SAMPLE_BAG_RATE = 80;
 export const MAX_ASSISTANCE_BAGS = 8;
 export type LuggageSelection = Record<string, { selected: boolean; bags: number }>;
 export type LuggageQuote = { stop: AssistanceStop; bags: number; amount: number };
+export type PorterContact = { phoneLabel: string; email: string };
 export type MockLuggageBooking = {
   sample: true;
+  status: 'reserved';
   total: number;
-  assignments: Array<LuggageQuote & { porterName: string; meetingPoint: string; meetingTime: string }>;
+  assignments: Array<LuggageQuote & { porterName: string; contact: PorterContact; meetingPoint: string; meetingTime: string }>;
 };
 
 export function supportsLuggageAssistance(stop: AssistanceStop) {
@@ -31,6 +33,13 @@ export function createMockLuggageBooking(stops: AssistanceStop[], selection: Lug
   const quote = luggageQuote(stops, selection);
   if (!quote.length) throw new Error('Select at least one station.');
   const names = ['Rakesh Sharma', 'Amit Verma', 'Suresh Kumar', 'Vijay Singh'];
+  // Masked numbers and reserved .example domains cannot contact unrelated people.
+  const contacts: PorterContact[] = [
+    { phoneLabel: '+91 9XXXX X4821', email: 'rakesh.sharma@railease.example' },
+    { phoneLabel: '+91 9XXXX X7164', email: 'amit.verma@railease.example' },
+    { phoneLabel: '+91 9XXXX X3952', email: 'suresh.kumar@railease.example' },
+    { phoneLabel: '+91 9XXXX X6083', email: 'vijay.singh@railease.example' },
+  ];
   const assignments = quote.map((item) => {
     const index = stops.findIndex((stop) => stop.id === item.stop.id);
     const departure = item.stop.id === 'boarding';
@@ -39,9 +48,10 @@ export function createMockLuggageBooking(stops: AssistanceStop[], selection: Lug
       // Snapshot the stop so later edits cannot change an existing confirmation.
       stop: { ...item.stop, station: { ...item.stop.station } },
       porterName: names[index % names.length],
+      contact: { ...contacts[index % contacts.length] },
       meetingPoint: departure ? 'Main entrance, beside the enquiry board' : 'On the arrival platform, beside the footbridge sign',
       meetingTime: new Date(Date.parse(item.stop.time) - (departure ? 30 * 60_000 : 0)).toISOString(),
     };
   });
-  return { sample: true, total: assignments.reduce((total, item) => total + item.amount, 0), assignments };
+  return { sample: true, status: 'reserved', total: assignments.reduce((total, item) => total + item.amount, 0), assignments };
 }

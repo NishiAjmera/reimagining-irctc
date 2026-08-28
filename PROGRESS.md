@@ -6,6 +6,8 @@ Last updated: 28 August 2026
 
 **Published product live; Gemini chat and search-capture fixes validated locally, not yet published**
 
+Release preparation: validated Gemini/search work committed as `a7cd29a`. Luggage assistance now uses “Book assistance”, “Assistance booked” and “Reserved” for its local simulated state, with distinct masked phone labels and reserved-domain email contacts at each station. Contact actions cannot reach unrelated people. Production publishing is pending: the public Site has no Gemini runtime configuration, and live-chat authorization must be confirmed before enabling paid calls. Existing public access has not changed.
+
 ## Milestones
 
 - [x] Define product goal and MVP boundaries

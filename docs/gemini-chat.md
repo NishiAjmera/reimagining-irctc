@@ -1,6 +1,6 @@
 # Gemini journey chat
 
-Status: configured and tested with Gemini locally. Live multi-turn extraction and search regressions pass; no public deployment performed.
+Status: release 21 published on 28 August 2026 with the user-configured hosted Gemini secret (environment revision 2). Live multi-turn extraction and search regressions pass locally. Hosted paid chat remains locked because `GEMINI_CHAT_ACCESS` and `GEMINI_ALLOWED_USER_IDS` are not yet configured; user approval of permitted chat identities and sign-in wiring is still needed. Public Site access is unchanged.
 
 ## Local setup
 
@@ -38,11 +38,11 @@ The default model is pinned to `gemini-3.7-flash`. Requests use the Gemini Inter
 
 The existing browser-only login is **not** trusted to authorize paid Gemini calls. `local` access works only in development on a loopback URL and is rejected in production. Same-origin JSON requests are required.
 
-For deployment on Sites, configure `GEMINI_CHAT_ACCESS=sites` and `GEMINI_ALLOWED_USER_IDS` with explicitly allowed platform-authenticated user IDs. The API validates the Sites-owned `oai-authenticated-user-id` header. Anonymous/non-allowlisted users are rejected. This mode must only run behind the Sites dispatcher, not a proxy that forwards arbitrary client identity headers. The current public site's UI login does not create this platform identity; configure/test platform sign-in and allowlisting before publishing a key. No authentication policy or public deployment was changed in this task.
+For deployment on Sites, configure `GEMINI_CHAT_ACCESS=sites` and `GEMINI_ALLOWED_USER_IDS` with explicitly allowed platform-authenticated user IDs. The API validates the Sites-owned `oai-authenticated-user-id` header. Anonymous/non-allowlisted users are rejected. This mode must only run behind the Sites dispatcher, not a proxy that forwards arbitrary client identity headers. The current public site's UI login does not create this platform identity; configure/test platform sign-in and allowlisting before enabling paid chat. Release 21 has the hosted secret, but these access settings remain unset. In post-deployment checks, unauthenticated chat returned the expected HTTP 403 ACCESS_REQUIRED; the site returned HTTP 200. No authentication policy was changed.
 
 ## Verification and key-based acceptance checks
 
-94 automated tests pass, covering complete-state extraction, corrections/clearing, missing details, both-town mode selection, Indian dates/times, preferred class and arrival deadlines, search API validation, full-itinerary budget enforcement, provider errors/timeouts, cache coalescing/expiry/isolation, throttling and access checks. Typecheck, lint and production build pass.
+95 automated tests pass, covering complete-state extraction, corrections/clearing, missing details, both-town mode selection, Indian dates/times, preferred class and arrival deadlines, search API validation, full-itinerary budget enforcement, provider errors/timeouts, cache coalescing/expiry/isolation, throttling, access checks and safe sample luggage contacts. Typecheck, lint and production build pass.
 
 The opt-in live regression runs six sequential Gemini turns: town-to-town planning, bus connections and budget, passenger/class/time corrections, authoritative manual edits with a question-only turn, clearing preferences, and replacing both route ends. It then calls the actual train-search endpoint and verifies that matching results honor the captured fields. A concurrent duplicate returned the same validated reply with one provider call and an application cache hit. Short live requests reported zero provider-cached tokens; implicit-cache savings are not claimed.
 

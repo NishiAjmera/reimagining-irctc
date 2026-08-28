@@ -4,9 +4,9 @@ Last updated: 28 August 2026
 
 ## Overall status
 
-**Published product live; Gemini chat and search-capture fixes validated locally, not yet published**
+**Release 21 published; hosted Gemini secret applied, live-chat authorization still to configure**
 
-Release preparation: validated Gemini/search work committed as `a7cd29a`. Luggage assistance now uses “Book assistance”, “Assistance booked” and “Reserved” for its local simulated state, with distinct masked phone labels and reserved-domain email contacts at each station. Contact actions cannot reach unrelated people. Production publishing is pending: the public Site has no Gemini runtime configuration, and live-chat authorization must be confirmed before enabling paid calls. Existing public access has not changed.
+Release 21 was published successfully on 28 August 2026 from Site source `1f1f655` (matching GitHub app source at `15cfbf5`). The deployment applied environment revision 2, including the user-configured secret `GEMINI_API_KEY`. `GEMINI_CHAT_ACCESS` and `GEMINI_ALLOWED_USER_IDS` remain unset, so paid chat remains fail-closed; no access policy was weakened. Public Site access is unchanged. Luggage assistance now uses “Book assistance”, “Assistance booked” and “Reserved” for its local simulated state, with distinct masked phone labels and reserved-domain email contacts at each station. Contact actions cannot reach unrelated people. All 95 tests, typecheck, lint and the production build passed; publishing reused that exact validated build.
 
 ## Milestones
 
@@ -66,7 +66,7 @@ Release preparation: validated Gemini/search work committed as `a7cd29a`. Luggag
 
 ## Current focus
 
-Gemini 3.7 Flash chat is configured and live-tested locally, with one shared conversation for natural-language and manual entry, explicit search confirmation and grounded result follow-ups. Testing exposed omitted fields in optional model patches; a complete required-field trip snapshot now produces validated diffs and confirmations derived from the saved state. Search enforces captured dates, timing, arrival deadlines, preferred class, confirmed seats and full-trip budget, including both bus legs. Non-matching options remain available with trade-offs. The key stays server-side. Two-minute isolated response caching and duplicate-request coalescing were verified; short requests had no provider-cache hits. Local-only access is enabled; production paid-chat access fails closed without an allowlisted Sites identity. No new publication has occurred. Setup, limits and regression instructions: `docs/gemini-chat.md`.
+Gemini 3.7 Flash chat is configured and live-tested locally, with one shared conversation for natural-language and manual entry, explicit search confirmation and grounded result follow-ups. Testing exposed omitted fields in optional model patches; a complete required-field trip snapshot now produces validated diffs and confirmations derived from the saved state. Search enforces captured dates, timing, arrival deadlines, preferred class, confirmed seats and full-trip budget, including both bus legs. Non-matching options remain available with trade-offs. The key stays server-side. Two-minute isolated response caching and duplicate-request coalescing were verified; short requests had no provider-cache hits. Release 21 includes this code and the hosted secret, but production chat stays locked pending a configured mode and verified user allowlist. Post-deployment checks returned HTTP 200 for the site and the expected HTTP 403 ACCESS_REQUIRED for unauthenticated chat. Setup, limits and regression instructions: `docs/gemini-chat.md`.
 
 Local review: replaced Guest with Nishi Ajmera, removed developer-style copy from customer screens, and added the booking contact phone plus a luggage-assistance contact area. Direct porter calling stays disabled without a confirmed number; railway enquiries remains available on 139. Planning/estimated/provider-confirmation wording replaces false paid or reserved claims. No changes to provider integrations or authentication.
 
@@ -80,7 +80,7 @@ The refreshed product is live with public-link access at [railease-journey-plann
 
 ## Verification
 
-- Gemini/search validation: 94 automated tests, typecheck, lint and production build pass. Six-turn live Gemini regression passes for town connections, corrections, manual-state authority, preference clearing and complete route replacement; the actual search endpoint returns only preference-matching primary options. Concurrent duplicate calls reuse one validated response. The key remains ignored and server-side; production is unchanged.
+- Gemini/search and luggage validation: 95 automated tests, typecheck, lint and production build pass. Six-turn live Gemini regression passes for town connections, corrections, manual-state authority, preference clearing and complete route replacement; the actual search endpoint returns only preference-matching primary options. Concurrent duplicate calls reuse one validated response. The key remains ignored and server-side; no secret was found in the deployment artifacts.
 
 - Signed-in browser QA: natural-language capture reaches search and traveller review; questions use displayed fare data; retry recovers a slow provider response without duplicate messages; closing/reopening and returning from journey selection preserve the conversation. Manual edits invalidate in-flight replies. Manual town-to-town details feed the shared chat and optional bus connections. Fixed native date-input synchronization discovered during this check.
 

@@ -15,9 +15,7 @@ export function JourneyClassPicker({ journey, selectedId, onSelect }: { journey:
   })}</div></fieldset>;
 }
 
-export function applyClassChoice(journey: JourneyOption, choice: JourneyClassChoice): JourneyOption {
-  return { ...journey, id: choice.id, classOption: choice.classOption, totalFare: choice.totalFare, reasons: choice.reasons, tradeoffs: choice.tradeoffs, legs: choice.legs ?? journey.legs };
-}
+export { applyClassChoice } from '@/lib/journey/classChoice';
 
 function toChoice(journey: JourneyOption): JourneyClassChoice {
   return { id: journey.id, classOption: journey.classOption, totalFare: journey.totalFare, reasons: journey.reasons, tradeoffs: journey.tradeoffs, legs: journey.legs };

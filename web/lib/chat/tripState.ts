@@ -26,7 +26,7 @@ export function nextTripQuestion(draft: JourneyIntent, today: string) {
   if (field === 'passengerCount') return 'How many people are travelling?';
   if (field === 'journeyMode') return 'Would you like bus connections included, or will you arrange travel to and from the stations?';
   if (field === 'arrivalDate') return 'Your arrival deadline is before departure. Which date should I change?';
-  return field ? 'Please check the trip details before searching.' : 'Review the details, then select Search trains.';
+  return field ? 'Please check the trip details before searching.' : 'Do these details look right? Tell me to go ahead and search when you’re ready.';
 }
 
 /** Never use generated prose to confirm a mutation: describe the committed state. */

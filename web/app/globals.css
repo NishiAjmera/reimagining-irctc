@@ -4,7 +4,44 @@
 .chat-error { padding: 10px 12px; background: #fff7e9; color: #754b15; border-radius: 10px; font-size: 13px; margin-bottom: 10px; }
 .chat-error p { margin: 0; }
 .chat-error button { text-decoration: underline; margin-top: 6px; font-weight: 650; }
-.chat-compose .chat-search-action { width: 100%; margin-bottom: 10px; font-size: 13px; padding: 10px 14px; }
+.chat-booking-panel { max-width: 1000px; margin: 0 auto; }
+.chat-booking-steps { display: flex; gap: 24px; list-style: none; padding: 0; margin: 0 0 26px; color: var(--muted); font-size: 12px; }
+.chat-booking-steps li { display: flex; align-items: center; gap: 8px; }
+.chat-booking-steps li[aria-current] { color: var(--teal); font-weight: 700; }
+.chat-booking-steps li > span { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #e8eeea; }
+.chat-booking-heading h2 { font-size: clamp(26px, 3vw, 38px); margin: 8px 0; letter-spacing: -.035em; }
+.chat-booking-heading > p:last-child { color: var(--muted); margin-bottom: 22px; font-size: 14px; }
+.chat-booking-journey, .chat-booking-form, .chat-booking-review, .chat-booking-fare { background: var(--paper); border-radius: 16px; padding: 22px; margin-bottom: 16px; }
+.chat-booking-journey > header { display: flex; justify-content: space-between; align-items: start; gap: 16px; margin-bottom: 18px; }
+.chat-booking-journey h3 { font-size: 20px; margin-bottom: 5px; }
+.chat-booking-journey header span, .chat-booking-journey header > strong { font-size: 12px; }
+.chat-booking-journey header span { color: var(--muted); }
+.chat-booking-journey .status-confirmed { color: var(--teal); }
+.chat-booking-journey .status-warning { color: #9a5713; }
+.chat-booking-form fieldset { padding: 0; margin: 0 0 22px; border: 0; }
+.chat-booking-form legend { margin-bottom: 12px; font-size: 15px; font-weight: 750; }
+.chat-booking-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.chat-booking-fields label { display: grid; gap: 7px; color: var(--muted); font-size: 12px; }
+.chat-booking-fields input, .chat-booking-fields select { min-width: 0; width: 100%; padding: 12px; color: var(--ink); border: 1px solid #d0d5d2; border-radius: 8px; background: #fff; font: inherit; font-size: 14px; }
+.chat-booking-fields input:focus-visible, .chat-booking-fields select:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.chat-booking-review header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.chat-booking-review header .back-link { margin-bottom: 0; }
+.chat-booking-review h3 { font-size: 17px; }
+.chat-booking-review ul { list-style: none; padding: 0; margin: 18px 0; display: grid; gap: 14px; }
+.chat-booking-review li { display: grid; gap: 5px; overflow-wrap: anywhere; }
+.chat-booking-review li span, .chat-booking-contact { font-size: 13px; color: var(--muted); }
+.chat-booking-contact { display: flex; flex-wrap: wrap; gap: 8px 24px; overflow-wrap: anywhere; }
+.chat-booking-fare { display: grid; gap: 12px; font-size: 13px; }
+.chat-booking-fare > div { display: flex; justify-content: space-between; gap: 18px; }
+.chat-booking-fare .total { font-size: 19px; margin-top: 6px; }
+.chat-booking-warning { border-radius: 10px; background: #fff3de; color: #89540a; padding: 14px; font-size: 13px; line-height: 1.6; margin-bottom: 16px; }
+.chat-booking-confirm-note { display: flex; align-items: start; gap: 10px; padding: 17px; background: #e5f0eb; border-radius: 12px; color: var(--teal); font-size: 14px; line-height: 1.6; }
+.chat-booking-confirm-note svg { flex-shrink: 0; margin-top: 3px; }
+.chat-booking-note { display: flex; gap: 6px; align-items: start; color: var(--muted); font-size: 11px; line-height: 1.6; margin: 14px 0; }
+.chat-booking-note svg { flex-shrink: 0; margin-top: 2px; }
+.chat-booking-reference { display: flex; align-items: center; gap: 14px; padding: 22px; background: var(--ink); color: white; border-radius: 12px; margin: 18px 0; }
+.chat-booking-reference > div { display: grid; gap: 6px; }.chat-booking-reference span { font-size: 12px; color: #c2d1da; }.chat-booking-reference strong { font-size: 22px; letter-spacing: .06em; }
+@media (max-width: 600px) { .chat-booking-steps { gap: 14px; }.chat-booking-journey, .chat-booking-form, .chat-booking-review, .chat-booking-fare { padding: 16px; }.chat-booking-journey > header { flex-direction: column; }.chat-booking-fields { grid-template-columns: 1fr; } }
 .chat-compose button:disabled { opacity: .5; cursor: not-allowed; }
 .chat-extra-details { margin: 16px 0; }
 .chat-extra-details summary { cursor: pointer; font-size: 13px; font-weight: 650; }

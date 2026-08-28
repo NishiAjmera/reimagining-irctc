@@ -1,9 +1,10 @@
 import { hasRoadConnection, railConnectionsFor, travelLocations } from '@/lib/data/locations';
 import type { JourneyIntent } from '@/types/journey';
+import { readWorkflow, type WorkflowContext, type ChatAction, type BookingUpdates } from './bookingFlow';
 
 export type ChatMessage = { id: string; role: 'assistant' | 'user'; text: string };
 export type IntentPatch = { [K in keyof JourneyIntent]?: JourneyIntent[K] | null };
-export type ChatRequest = { conversationId: string; messages: ChatMessage[]; draft: JourneyIntent; resultContext?: string };
+export type ChatRequest = { conversationId: string; messages: ChatMessage[]; draft: JourneyIntent; resultContext?: string; workflow?: WorkflowContext };
 export type ChatReply = {
   message: string;
   patch: IntentPatch;
@@ -11,6 +12,8 @@ export type ChatReply = {
   readyToSearch: boolean;
   needsClarification?: boolean;
   suggestions: string[];
+  action?: ChatAction;
+  bookingUpdates?: BookingUpdates;
 };
 
 export const MAX_MESSAGE_LENGTH = 2000;
@@ -134,5 +137,5 @@ export function validateChatRequest(value: unknown): ChatRequest {
   });
   if (messages.at(-1)?.role !== 'user' || messages.reduce((length, message) => length + message.text.length, 0) > MAX_HISTORY_CHARACTERS) throw new Error('Conversation too long');
   if (value.resultContext !== undefined && (typeof value.resultContext !== 'string' || value.resultContext.length > 6000)) throw new Error('Invalid result context');
-  return { conversationId: value.conversationId, messages, draft: validateDraft(value.draft), ...(typeof value.resultContext === 'string' ? { resultContext: value.resultContext } : {}) };
+  return { conversationId: value.conversationId, messages, draft: validateDraft(value.draft), workflow: readWorkflow(value.workflow), ...(typeof value.resultContext === 'string' ? { resultContext: value.resultContext } : {}) };
 }

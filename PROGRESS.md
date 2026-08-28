@@ -4,13 +4,22 @@ Last updated: 28 August 2026
 
 ## Overall status
 
-**Release 22 published; demo-account Gemini chat enabled**
+**Conversational search and booking review validated locally; public update awaiting approval**
+
+The chat-only Search trains button has been removed. Explicit conversational consent (including “go ahead and serach”) now triggers search and shows results on the right; the manual details-panel search button remains. Chat can select a real displayed/recommended journey or class, collect each traveller's name/age/gender/optional berth preference and booking contact, then show a complete review on the right. Only an explicit final confirmation after that review completes the existing local journey-summary flow. Any changed journey, fare or details invalidates the prior review; repeated confirmation keeps one reference. No real ticket, payment or reservation is created.
+
+Validation: 134 automated tests, typecheck, lint and production build pass. A six-turn live Gemini regression verified search consent, typo handling, recommended selection, two-passenger details, contact capture and “do not book yet” correction. The first live attempt timed out; the bounded rerun passed. A follow-up question no longer discards supplied traveller details. Public publishing approval has been requested; release 22 remains live until approved.
 
 Release 22 was published successfully on 28 August 2026 from Site source `b0b5345`, matching GitHub app source `f5c8d0b`, with hosted environment revision 3. The existing `demo@railease.in` login now verifies credentials server-side and creates a signed eight-hour session. No credentials are displayed or embedded in the client. Same-origin checks, cookie expiry, password-attempt throttling, and a shared-account chat budget protect the paid endpoint. All 105 automated tests, typecheck, lint and production build pass; 69 build artifacts contain none of the configured secrets. Public Site access and previous luggage changes are preserved.
 
 Live HTTP checks passed: homepage 200, anonymous chat 403, incorrect password 401, signed session recognized, and authenticated Gemini chat 200 with correct Mumbai → Pune, 10 September 2026, two-traveller capture. An identical replay returned the same validated response. The hosted smoke test used a server-signed account cookie; successful password entry is covered by automated login-to-chat tests, not a new browser login. Existing users should refresh and sign in again with their unchanged credentials.
 
 ## Milestones
+
+- [x] Trigger search through explicit chat consent while preserving manual search
+- [x] Select displayed journeys/classes and collect validated traveller/contact details in chat
+- [x] Require a fresh, complete review and explicit final confirmation before local completion
+- [x] Test stale-review protection, duplicate confirmation, waitlist selection and live checkout conversation
 
 - [x] Define product goal and MVP boundaries
 - [x] Define primary AI-assisted journey flow

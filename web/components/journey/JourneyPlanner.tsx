@@ -3,7 +3,9 @@
 import { ArrowLeft, ArrowRight, BusFront, Check, CreditCard, GripVertical, Languages, Landmark, LockKeyhole, MapPin, Menu, PanelLeftClose, Search, Send, ShieldCheck, Smartphone, TicketCheck, TrainFront, UserRound, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { track } from '@/lib/analytics';
-import { indiaToday, MAX_MESSAGE_LENGTH, missingJourneyFields } from '@/lib/chat/contract';
+import { indiaToday, MAX_MESSAGE_LENGTH, missingJourneyFields, type ChatReply } from '@/lib/chat/contract';
+import { applyBookingReply, bookingPrompt, confirmBooking, createBookingDetails, explicitBookingConfirmation, mergeBookingDetails, NO_BOOKING_UPDATES, pickJourney, startBooking, updateBooking, type BookingDetails, type BookingFlow, type PassengerDetails } from '@/lib/chat/bookingFlow';
+import { ChatBookingPanel } from './ChatBookingPanel';
 import { useJourneyChat } from './useJourneyChat';
 import { chatResultContext } from '@/lib/chat/results';
 import { rankJourneys } from '@/lib/ranking/rankJourneys';
@@ -21,8 +23,6 @@ import { hasRoadConnection, resolveRailCity } from '@/lib/data/locations';
 type Stage = 'home' | 'chat' | 'booking' | 'payment' | 'confirmed';
 type SearchMode = 'describe' | 'structured';
 type DataSource = 'sample' | 'railradar';
-type PassengerDetails = { name: string; age: string; gender: string; berth: string };
-type BookingDetails = { passengers: PassengerDetails[]; email: string; phone: string };
 
 export const DEMO_PROMPT = "I need to travel from Bengaluru to Jaipur next Friday for a wedding. I need to reach by 4 PM. We’re three people including my mother, and I don’t want a waitlisted ticket.";
 
@@ -148,11 +148,11 @@ function JourneyDateInput({ value, min, onChange }: { value: string; min: string
   return <input type="date" min={min} value={value} onInput={emit} onChange={emit} />;
 }
 
-type ChatPanel = 'details' | 'searching' | 'results';
+type ChatPanel = 'details' | 'searching' | 'results' | 'booking';
 
 function ConversationWorkspace({ initialQuery, initialIntent, onIntentChange, onChoose }: { initialQuery: string; initialIntent?: JourneyIntent | null; onIntentChange: (intent: JourneyIntent) => void; onChoose: (journey: JourneyOption) => void }) {
-  const chat = useJourneyChat(initialQuery, initialIntent);
-  const { draft, messages, busy, readyToSearch, addAssistant } = chat;
+  const chat = useJourneyChat(initialQuery, initialIntent, handleAssistantReply);
+  const { draft, messages, busy, readyToSearch, addAssistant, setWorkflowContext } = chat;
   const [reply, setReply] = useState('');
   const [panel, setPanel] = useState<ChatPanel>('details');
   const [chatOutcome, setChatOutcome] = useState<SearchOutcome | null>(null);
@@ -160,15 +160,15 @@ function ConversationWorkspace({ initialQuery, initialIntent, onIntentChange, on
   const [chatOpen, setChatOpen] = useState(Boolean(initialQuery));
   const [chatWidth, setChatWidth] = useState(420);
   const [resizing, setResizing] = useState(false);
+  const [booking, setBooking] = useState<BookingFlow | null>(null);
+  const bookingRef = useRef<BookingFlow | null>(null);
   const threadEnd = useRef<HTMLDivElement | null>(null);
   const searchRevision = useRef(0);
-  const priorDraft = useRef(draft);
+  const setBookingState = (value: BookingFlow | null) => { bookingRef.current = value; setBooking(value); };
+  const workflowPhase = booking?.phase ?? (panel === 'results' ? 'results' : 'planning');
   useEffect(() => {
-    if (priorDraft.current === draft) return;
-    priorDraft.current = draft;
-    searchRevision.current += 1;
-    setPanel('details'); setChatOutcome(null);
-  }, [draft]);
+    setWorkflowContext({ phase: workflowPhase, journeyId: booking?.journey.id ?? null, details: booking?.details ?? null, journeySummary: booking ? JSON.stringify({ train: booking.journey.trainName, class: booking.journey.classOption.code, departure: booking.journey.departureDateTime, arrival: booking.journey.arrivalDateTime, fare: booking.journey.totalFare, availability: booking.journey.classOption.status }) : null });
+  }, [booking, workflowPhase, setWorkflowContext]);
 
   useEffect(() => { onIntentChange(draft); }, [draft, onIntentChange]);
   useEffect(() => { threadEnd.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, [messages]);
@@ -188,16 +188,60 @@ function ConversationWorkspace({ initialQuery, initialIntent, onIntentChange, on
     };
   }, [resizing]);
 
-  const updateDraft = (next: JourneyIntent) => { searchRevision.current += 1; chat.updateDraft(next); setPanel('details'); setChatOutcome(null); };
-  const handleReply = (value: string) => { if (chat.submit(value)) setReply(''); };
+  const updateDraft = (next: JourneyIntent) => { searchRevision.current += 1; chat.updateDraft(next); setBookingState(null); setPanel('details'); setChatOutcome(null); };
+  const finishBooking = (value: string) => {
+    const current = bookingRef.current;
+    if (!current) return;
+    const next = confirmBooking(current, value, `RE-${crypto.randomUUID().slice(0, 8).toUpperCase()}`);
+    setBookingState(next);
+    addAssistant(bookingPrompt(next));
+  };
+  const handleReply = (value: string) => {
+    if (bookingRef.current && explicitBookingConfirmation(value) && !busy) {
+      if (chat.addUser(value)) { finishBooking(value); setReply(''); }
+    } else if (chat.submit(value)) setReply('');
+  };
 
-  const searchFromChat = async () => {
-    if (!readyToSearch || busy || panel === 'searching') return;
+  function handleAssistantReply(next: JourneyIntent, response: ChatReply, userText: string, changed: boolean) {
+    if (changed) { searchRevision.current += 1; setBookingState(null); setChatOutcome(null); setPanel('details'); }
+    const action = response.action;
+    if (action?.type === 'search' && response.readyToSearch) { void searchFromChat(next); return; }
+    if (changed) { addAssistant(response.message); return; }
+    if (action?.type === 'select') {
+      if (!chatOutcome || changed) { addAssistant('Let’s search your trip first, then choose from the available journeys.'); return; }
+      const journey = pickJourney(chatOutcome, action);
+      if (!journey) { addAssistant('I couldn’t identify a confirmed recommendation or that class. Please choose one of the journeys on the right.'); return; }
+      const flow = startBooking(journey, next.passengerCount);
+      const previous = bookingRef.current;
+      // Reselecting a class preserves traveller input but always requires a new review.
+      const updated = updateBooking(flow, mergeBookingDetails(previous?.details ?? flow.details, response.bookingUpdates ?? NO_BOOKING_UPDATES));
+      setBookingState(updated); setPanel('booking'); setChatOpen(true);
+      addAssistant(`${journey.trainName} · ${journey.classOption.code}. ${bookingPrompt(updated)}`); return;
+    }
+    if (action?.type === 'cancel' && bookingRef.current?.phase !== 'completed') {
+      setBookingState(null); setPanel(chatOutcome ? 'results' : 'details'); addAssistant('Selection cleared. You can choose another journey.'); return;
+    }
+    const current = bookingRef.current;
+    if (current && !changed) {
+      if (current.phase === 'completed') { addAssistant(bookingPrompt(current)); return; }
+      const updated = applyBookingReply(current, response.bookingUpdates ?? NO_BOOKING_UPDATES, Boolean(response.needsClarification));
+      const edited = JSON.stringify(updated.details) !== JSON.stringify(current.details);
+      setBookingState(updated);
+      if (response.needsClarification) { addAssistant(response.message); return; }
+      if (action?.type === 'confirm' && !edited && current.phase === 'review') { finishBooking(userText); return; }
+      addAssistant(edited || action?.type === 'confirm' ? bookingPrompt(updated) : response.message); return;
+    }
+    addAssistant(response.message);
+  }
+
+  const searchFromChat = async (searchDraft = draft) => {
+    if (missingJourneyFields(searchDraft).length || panel === 'searching') return;
     const revision = ++searchRevision.current;
+    setBookingState(null); chat.setResultContext(undefined);
     setPanel('searching');
-    addAssistant(draft.journeyMode === 'complete' ? `Building complete journey options from ${draft.originCity} to ${draft.destinationCity}.` : `Searching trains from ${resolveRailCity(draft.originCity, draft.originRailCity)} to ${resolveRailCity(draft.destinationCity, draft.destinationRailCity)}.`);
+    addAssistant(searchDraft.journeyMode === 'complete' ? `Building complete journey options from ${searchDraft.originCity} to ${searchDraft.destinationCity}.` : `Searching trains from ${resolveRailCity(searchDraft.originCity, searchDraft.originRailCity)} to ${resolveRailCity(searchDraft.destinationCity, searchDraft.destinationRailCity)}.`);
     try {
-      const response = await fetch('/api/trains', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft) });
+      const response = await fetch('/api/trains', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(20000), body: JSON.stringify(searchDraft) });
       if (!response.ok) throw new Error('Search unavailable');
       const payload = await response.json() as { outcome: SearchOutcome; source: DataSource };
       if (revision !== searchRevision.current) return;
@@ -208,7 +252,7 @@ function ConversationWorkspace({ initialQuery, initialIntent, onIntentChange, on
       track('results_viewed', { resultCount: payload.outcome.options.length, source: payload.source, mode: 'conversation' });
     } catch {
       if (revision !== searchRevision.current) return;
-      const fallback = rankJourneys(draft);
+      const fallback = rankJourneys(searchDraft);
       chat.setResultContext(chatResultContext(fallback, 'sample'));
       setChatOutcome(fallback); setSource('sample'); setPanel('results');
       const matches = fallback.options.length + fallback.indirectOptions.length;
@@ -229,15 +273,15 @@ function ConversationWorkspace({ initialQuery, initialIntent, onIntentChange, on
       </div>
       {panel !== 'searching' ? <div className="chat-compose">
         {suggestions.length ? <div className="chat-suggestions">{suggestions.map((item) => <button type="button" key={item} disabled={busy} onClick={() => handleReply(item)}>{item}</button>)}</div> : null}
-        {readyToSearch && panel === 'details' ? <button type="button" className="secondary-button chat-search-action" disabled={busy} onClick={() => void searchFromChat()}>Search trains <ArrowRight size={15} /></button> : null}
         {chat.error ? <div className="chat-error" role="alert"><p>{chat.error}</p>{chat.retryable ? <button type="button" disabled={busy} onClick={chat.retry}>Try again</button> : null}</div> : null}
         <form onSubmit={(event) => { event.preventDefault(); handleReply(reply); }}><label className="sr-only" htmlFor="chat-reply">Reply to RailEase</label><input id="chat-reply" value={reply} onChange={(event) => setReply(event.target.value)} maxLength={MAX_MESSAGE_LENGTH} disabled={busy} placeholder="Ask a question or change a detail" /><button type="submit" disabled={busy || !reply.trim()} aria-label="Send reply"><Send size={18} /></button></form>
       </div> : null}
     </div>
-    <aside className="journey-panel" aria-label={panel === 'results' ? 'Train search results' : 'Journey details'}>
+    <aside className="journey-panel" aria-label={panel === 'results' ? 'Train search results' : panel === 'booking' ? 'Booking review' : 'Journey details'}>
       {panel === 'details' ? <ChatTripDetails intent={draft} ready={readyToSearch && !busy} onChange={updateDraft} onSearch={() => void searchFromChat()} /> : null}
       {panel === 'searching' ? <div className="panel-searching" role="status"><span className="simple-loader"><TrainFront size={23} /></span><h2>Finding trains</h2><p>{draft.originCity} → {draft.destinationCity}</p></div> : null}
       {panel === 'results' && chatOutcome ? <fieldset className="chat-results-lock" disabled={busy} aria-busy={busy}><ConversationResults intent={draft} outcome={chatOutcome} source={source} onEdit={() => { setPanel('details'); addAssistant('Update anything on the right, then search again.'); }} onChoose={onChoose} /></fieldset> : null}
+      {panel === 'booking' && booking ? <ChatBookingPanel flow={booking} intent={draft} busy={busy} onChange={(details) => { chat.invalidate(); setBookingState({ ...booking, details, phase: 'collecting', reviewKey: null }); }} onReview={() => { const next = updateBooking(booking, booking.details); setBookingState(next); addAssistant(bookingPrompt(next)); setChatOpen(true); }} onBack={() => { chat.invalidate(); setBookingState(null); setPanel('results'); addAssistant('Choose another journey, or tell me which one you prefer.'); }} /> : null}
     </aside>
   </section>;
 }
@@ -335,7 +379,5 @@ function Confirmation({ journey, intent, details, onHome }: { journey: JourneyOp
   const reference = `RE${journey.trainNumber.slice(-4)}${intent.passengerCount}X`;
   return <section className="confirmation-screen screen-shell"><CheckoutSteps current="confirmed" /><div className="confirmation-mark"><TicketCheck size={36} /></div><p className="screen-kicker">Journey summary</p><h1>Your journey is ready.</h1><p>Contact: {details.email} · {details.phone}</p><div className="confirmation-reference"><span>Journey reference</span><strong>{reference}</strong><small>Not a travel ticket · Confirm booking with the provider</small></div><SelectedJourney journey={journey} intent={intent} /><TravelServices journey={journey} /><div className="confirmation-actions"><button className="primary-button" type="button" onClick={onHome}>Plan another journey</button></div></section>;
 }
-
-const createBookingDetails = (count: number): BookingDetails => ({ passengers: Array.from({ length: count }, () => ({ name: '', age: '', gender: '', berth: 'No preference' })), email: '', phone: '' });
 
 const formatTravelDate = (date: string) => new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${date}T00:00:00Z`));

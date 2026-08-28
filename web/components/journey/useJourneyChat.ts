@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { applyIntentPatch, boundedHistory, emptyJourneyDraft, MAX_MESSAGE_LENGTH, missingJourneyFields, type ChatMessage, type ChatReply, type ChatRequest } from '@/lib/chat/contract';
 import type { JourneyIntent } from '@/types/journey';
+import type { WorkflowContext } from '@/lib/chat/bookingFlow';
 
 const message = (role: ChatMessage['role'], text: string): ChatMessage => ({ id: crypto.randomUUID(), role, text });
 class ChatRequestError extends Error {}
 
-export function useJourneyChat(initialQuery: string, initialIntent?: JourneyIntent | null) {
+export function useJourneyChat(initialQuery: string, initialIntent?: JourneyIntent | null, onResponse?: (draft: JourneyIntent, reply: ChatReply, userText: string, changed: boolean) => void) {
   const [draft, setDraft] = useState<JourneyIntent>(() => initialIntent ?? emptyJourneyDraft());
   const [messages, setMessages] = useState<ChatMessage[]>(() => initialQuery ? [message('user', initialQuery)] : [message('assistant', 'Review your trip details, or ask me to help plan the journey.')]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -25,6 +26,9 @@ export function useJourneyChat(initialQuery: string, initialIntent?: JourneyInte
   const turns = useRef(0);
   const busyRef = useRef(false);
   const resultContext = useRef<string | undefined>(undefined);
+  const workflow = useRef<WorkflowContext | undefined>(undefined);
+  const responseHandler = useRef(onResponse);
+  useEffect(() => { responseHandler.current = onResponse; }, [onResponse]);
 
   const addAssistant = (text: string) => {
     const next = [...messagesRef.current, message('assistant', text)];
@@ -45,10 +49,13 @@ export function useJourneyChat(initialQuery: string, initialIntent?: JourneyInte
       if (!response.ok) throw new ChatRequestError(payload.error ?? 'Chat is unavailable. Please try again.');
       if (revision !== version.current) return;
       const next = applyIntentPatch(draftRef.current, payload.patch);
-      if (JSON.stringify(next) !== JSON.stringify(draftRef.current)) {
+      const changed = JSON.stringify(next) !== JSON.stringify(draftRef.current);
+      if (changed) {
         draftRef.current = next; setDraft(next); resultContext.current = undefined;
       }
-      addAssistant(payload.message); setSuggestions(payload.suggestions);
+      if (responseHandler.current) responseHandler.current(next, payload, request.messages.at(-1)!.text, changed);
+      else addAssistant(payload.message);
+      setSuggestions(payload.suggestions);
       setNeedsClarification(Boolean(payload.needsClarification));
       failedRequest.current = null;
     } catch (failure) {
@@ -80,7 +87,7 @@ export function useJourneyChat(initialQuery: string, initialIntent?: JourneyInte
     turns.current += 1;
     const next = [...messagesRef.current, message('user', text.trim())];
     messagesRef.current = next; setMessages(next);
-    void sendRequest({ conversationId: conversationId.current, messages: boundedHistory(next), draft: draftRef.current, resultContext: resultContext.current });
+    void sendRequest({ conversationId: conversationId.current, messages: boundedHistory(next), draft: draftRef.current, resultContext: resultContext.current, workflow: workflow.current });
     return true;
   };
 
@@ -94,6 +101,16 @@ export function useJourneyChat(initialQuery: string, initialIntent?: JourneyInte
   };
 
   const retry = () => { if (!busyRef.current && failedRequest.current) void sendRequest(failedRequest.current); };
-  const setResultContext = (context: string) => { resultContext.current = context; };
-  return { draft, messages, suggestions, busy, error, retryable, retry, submit, updateDraft, addAssistant, setResultContext, readyToSearch: !needsClarification && missingJourneyFields(draft).length === 0 };
+  const setResultContext = (context: string | undefined) => { resultContext.current = context; };
+  const setWorkflowContext = (context: WorkflowContext) => { workflow.current = context; };
+  const invalidate = () => {
+    version.current += 1; controller.current?.abort(); busyRef.current = false;
+    setBusy(false); setError(''); setRetryable(false); setSuggestions([]); failedRequest.current = null;
+  };
+  const addUser = (text: string) => {
+    if (busyRef.current) return false;
+    const next = [...messagesRef.current, message('user', text)];
+    messagesRef.current = next; setMessages(next); return true;
+  };
+  return { draft, messages, suggestions, busy, error, retryable, retry, submit, updateDraft, addAssistant, addUser, invalidate, setResultContext, setWorkflowContext, readyToSearch: !needsClarification && missingJourneyFields(draft).length === 0 };
 }

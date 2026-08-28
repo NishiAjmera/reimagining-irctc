@@ -1,6 +1,6 @@
 # Gemini journey chat
 
-Status: server-verified sessions added for the existing `demo@railease.in` account, at the user's request. Hosted environment revision 3 enables `demo_session` and stores the password verifier and session signing key as secrets. Publication and live session checks are pending. Public Site access is unchanged.
+Status: release 22 published on 28 August 2026 with server-verified sessions for the existing `demo@railease.in` account, at the user's request. Hosted environment revision 3 enables `demo_session` and stores the password verifier and session signing key as secrets. Public Site access is unchanged. Refresh and sign in again with the existing credentials to establish the new session.
 
 ## Local setup
 
@@ -48,7 +48,9 @@ The alternative `sites` mode still validates an allowlisted Sites-owned `oai-aut
 
 ## Verification and key-based acceptance checks
 
-105 automated tests pass, covering the existing extraction/search/cost controls plus login credential verification, cookie attributes, reload/logout, expiry, tampering, origin binding, secret rotation, throttling, unauthenticated provider denial, and a successful sign-in → mocked Gemini turn → cache-hit flow. Typecheck, lint and production build pass. All 69 build artifacts were checked against the configured secret values, with no matches. Deployment is pending for this update.
+105 automated tests pass, covering the existing extraction/search/cost controls plus login credential verification, cookie attributes, reload/logout, expiry, tampering, origin binding, secret rotation, throttling, unauthenticated provider denial, and a successful sign-in → mocked Gemini turn → cache-hit flow. Typecheck, lint and production build pass. All 69 build artifacts were checked against the configured secret values, with no matches.
+
+Release 22 live HTTP checks verified anonymous chat rejection (403), incorrect-password rejection (401), signed-session recognition, and a successful real Gemini request capturing Mumbai → Pune, 10 September 2026 and two travellers. An identical replay returned the same validated result. The live check used a server-signed account cookie; successful password entry is covered by automated route tests rather than a new browser sign-in. Caching savings are not inferred from identical response content alone.
 
 The opt-in live regression runs six sequential Gemini turns: town-to-town planning, bus connections and budget, passenger/class/time corrections, authoritative manual edits with a question-only turn, clearing preferences, and replacing both route ends. It then calls the actual train-search endpoint and verifies that matching results honor the captured fields. A concurrent duplicate returned the same validated reply with one provider call and an application cache hit. Short live requests reported zero provider-cached tokens; implicit-cache savings are not claimed.
 

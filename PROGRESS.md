@@ -4,9 +4,11 @@ Last updated: 28 August 2026
 
 ## Overall status
 
-**Demo-account chat sessions implemented; validation and publication in progress**
+**Release 22 published; demo-account Gemini chat enabled**
 
-The existing `demo@railease.in` login now verifies credentials server-side and creates a signed eight-hour session. Hosted environment revision 3 enables chat for that session while preserving the Gemini secret and public Site access. No credentials are displayed or embedded in the client. Same-origin checks, cookie expiry, password-attempt throttling, and a shared-account chat budget protect the paid endpoint. All 105 automated tests, typecheck, lint and production build pass; 69 build artifacts contain none of the configured secrets. Publication is next; release 21 remains live until then. The previous luggage changes are preserved.
+Release 22 was published successfully on 28 August 2026 from Site source `b0b5345`, matching GitHub app source `f5c8d0b`, with hosted environment revision 3. The existing `demo@railease.in` login now verifies credentials server-side and creates a signed eight-hour session. No credentials are displayed or embedded in the client. Same-origin checks, cookie expiry, password-attempt throttling, and a shared-account chat budget protect the paid endpoint. All 105 automated tests, typecheck, lint and production build pass; 69 build artifacts contain none of the configured secrets. Public Site access and previous luggage changes are preserved.
+
+Live HTTP checks passed: homepage 200, anonymous chat 403, incorrect password 401, signed session recognized, and authenticated Gemini chat 200 with correct Mumbai → Pune, 10 September 2026, two-traveller capture. An identical replay returned the same validated response. The hosted smoke test used a server-signed account cookie; successful password entry is covered by automated login-to-chat tests, not a new browser login. Existing users should refresh and sign in again with their unchanged credentials.
 
 ## Milestones
 

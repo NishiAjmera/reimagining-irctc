@@ -2,7 +2,7 @@
 
 Status: release 22 published on 28 August 2026 with server-verified sessions for the existing `demo@railease.in` account, at the user's request. Hosted environment revision 3 enables `demo_session` and stores the password verifier and session signing key as secrets. Public Site access is unchanged. Refresh and sign in again with the existing credentials to establish the new session.
 
-Next update: conversational search and traveller collection with final booking review are validated locally; public publishing approval is pending.
+Release 23 published the conversational search, traveller collection and final booking-review flow on 29 August 2026. The compact travel-extras discovery note is also live. Public access, demo-account session protection, Gemini secret and cost controls are unchanged.
 
 ## Local setup
 

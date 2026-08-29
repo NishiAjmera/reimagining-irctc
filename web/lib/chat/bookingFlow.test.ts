@@ -3,7 +3,7 @@ import { rankJourneys } from '@/lib/ranking/rankJourneys';
 import { emptyJourneyDraft, validateChatRequest } from './contract';
 import { parseGeminiOutput } from './gemini';
 import { tripSnapshot } from './tripState';
-import { applyBookingReply, bookingPrompt, confirmBooking, createBookingDetails, explicitBookingConfirmation, mergeBookingDetails, nextBookingQuestion, NO_ACTION, NO_BOOKING_UPDATES, pickJourney, readBookingUpdates, readWorkflow, startBooking, updateBooking, type BookingDetails } from './bookingFlow';
+import { applyBookingReply, beginBooking, bookingPrompt, completePayment, confirmBooking, createBookingDetails, explicitBookingConfirmation, mergeBookingDetails, nextBookingQuestion, NO_ACTION, NO_BOOKING_UPDATES, pickJourney, readBookingUpdates, readWorkflow, startBooking, updateBooking, type BookingDetails } from './bookingFlow';
 
 const draft = { ...emptyJourneyDraft(), originCity: 'Mumbai', destinationCity: 'Pune', preferredDate: '2026-09-10', passengerCount: 2, journeyMode: 'train_only' as const };
 const outcome = rankJourneys(draft);
@@ -46,6 +46,11 @@ describe('conversational search and selection', () => {
 });
 
 describe('traveller collection', () => {
+  it('shows a selected-journey review before collecting traveller details', () => {
+    const selected = startBooking(journey, 2);
+    expect(selected.phase).toBe('selected');
+    expect(beginBooking(selected).phase).toBe('collecting');
+  });
   it('retains supplied details while asking a clarifying question and withholds final review', () => {
     const flow = startBooking(journey, 2);
     const updated = applyBookingReply(flow, { ...NO_BOOKING_UPDATES, passengers: [{ index: 1, name: 'Asha Test', age: '32', gender: 'Female', berth: 'Lower' }] }, true);
@@ -89,12 +94,12 @@ describe('traveller collection', () => {
 });
 
 describe('final confirmation guard', () => {
-  it.each(['Confirm booking', 'yes, book it', 'Go ahead and book it.', 'Yes, confirm my booking'])('accepts explicit final confirmation %s', (text) => {
+  it.each(['Confirm booking', 'yes, book it', 'Go ahead and book it.', 'Yes, confirm my booking', 'looks good', 'confirm', 'just confirm', 'yes please', 'perfect', 'let\'s do it', 'conform booking'])('accepts natural final confirmation %s', (text) => {
     const flow = updateBooking(startBooking(journey, 2), complete);
     expect(explicitBookingConfirmation(text)).toBe(true);
-    expect(confirmBooking(flow, text, 'reference-1').phase).toBe('completed');
+    expect(confirmBooking(flow, text, 'reference-1').phase).toBe('payment');
   });
-  it.each(['yes', 'do not confirm booking', 'Confirm booking?', 'How do I confirm booking?', 'confirm booking but change my age', 'book it tomorrow', 'not yet', 'yes, book it if seats are confirmed'])('rejects ambiguous or conditional consent %s', (text) => {
+  it.each(['do not confirm booking', 'Confirm booking?', 'How do I confirm booking?', 'confirm booking but change my age', 'book it tomorrow', 'not yet', 'yes, book it if seats are confirmed'])('rejects conditional, negative or question-like consent %s', (text) => {
     const flow = updateBooking(startBooking(journey, 2), complete);
     expect(confirmBooking(flow, text, 'reference-1')).toBe(flow);
   });
@@ -116,9 +121,11 @@ describe('final confirmation guard', () => {
     for (const variant of variants) expect(confirmBooking(variant, 'Confirm booking', 'reference-1')).toBe(variant);
   });
   it('is idempotent and never claims that payment or ticketing occurred', () => {
-    const completed = confirmBooking(updateBooking(startBooking(journey, 2), complete), 'Confirm booking', 'reference-1');
-    expect(confirmBooking(completed, 'Confirm booking', 'reference-2')).toBe(completed);
+    const payment = confirmBooking(updateBooking(startBooking(journey, 2), complete), 'Confirm booking', 'reference-1');
+    expect(confirmBooking(payment, 'Confirm booking', 'reference-2')).toBe(payment);
+    const completed = completePayment(payment);
+    expect(completePayment(completed)).toBe(completed);
     expect(completed.reference).toBe('reference-1');
-    expect(bookingPrompt(completed)).toContain('no payment has been taken');
+    expect(bookingPrompt(completed)).toContain('cabs');
   });
 });

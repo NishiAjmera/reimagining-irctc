@@ -1,4 +1,4 @@
-import { hasRoadConnection, railConnectionsFor, travelLocations } from '@/lib/data/locations';
+import { railConnectionsFor, travelLocations } from '@/lib/data/locations';
 import type { JourneyIntent } from '@/types/journey';
 import { readWorkflow, type WorkflowContext, type ChatAction, type BookingUpdates } from './bookingFlow';
 
@@ -25,7 +25,7 @@ export function indiaToday(now = new Date()) {
 }
 
 export function emptyJourneyDraft(): JourneyIntent {
-  return { originCity: '', destinationCity: '', preferredDate: '', passengerCount: 0, flexibilityDays: 0, seniorTraveller: false, confirmedOnly: false, comfortPreference: 'any', rankingPriority: 'best' };
+  return { originCity: '', destinationCity: '', preferredDate: '', passengerCount: 0, flexibilityDays: 0, seniorTraveller: false, confirmedOnly: false, comfortPreference: 'any', rankingPriority: 'best', journeyMode: 'complete' };
 }
 
 const locationNames = travelLocations.map(({ name }) => name);
@@ -102,7 +102,6 @@ export function missingJourneyFields(draft: JourneyIntent, today = indiaToday())
   if (!locationNames.includes(draft.destinationCity) || draft.destinationCity === draft.originCity) missing.push('destinationCity');
   if (!validDate(draft.preferredDate) || draft.preferredDate < today) missing.push('preferredDate');
   if (!Number.isInteger(draft.passengerCount) || draft.passengerCount < 1 || draft.passengerCount > 8) missing.push('passengerCount');
-  if ((hasRoadConnection(draft.originCity) || hasRoadConnection(draft.destinationCity)) && !draft.journeyMode) missing.push('journeyMode');
   if (draft.arrivalDate && draft.preferredDate && draft.arrivalDate < draft.preferredDate) missing.push('arrivalDate');
   try { validateDraft(draft); } catch { missing.push('preferences'); }
   return missing;

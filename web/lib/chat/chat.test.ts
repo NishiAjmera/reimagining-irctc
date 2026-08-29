@@ -20,8 +20,8 @@ describe('itinerary contract', () => {
   it('keeps missing essentials empty instead of making up dates or passenger counts', () => {
     expect(missingJourneyFields(emptyJourneyDraft(), today)).toEqual(['originCity', 'destinationCity', 'preferredDate', 'passengerCount']);
   });
-  it('requires an explicit connection choice for towns at either end', () => {
-    expect(missingJourneyFields({ ...complete, journeyMode: undefined }, today)).toEqual(['journeyMode']);
+  it('can automatically recommend nearby-station connections for towns', () => {
+    expect(missingJourneyFields({ ...complete, journeyMode: undefined }, today)).toEqual([]);
     expect(missingJourneyFields(complete, today)).toEqual([]);
     expect(missingJourneyFields({ ...complete, journeyMode: 'train_only' }, today)).toEqual([]);
   });

@@ -1,10 +1,10 @@
 'use client';
 
-import { ArrowLeft, ArrowRight, BusFront, Check, CreditCard, GripVertical, Languages, Landmark, LockKeyhole, MapPin, Menu, PanelLeftClose, Search, Send, ShieldCheck, Smartphone, TicketCheck, TrainFront, UserRound, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, CreditCard, GripVertical, Languages, Landmark, LockKeyhole, MapPin, Menu, PanelLeftClose, Search, Send, ShieldCheck, Smartphone, TicketCheck, TrainFront, UserRound, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { track } from '@/lib/analytics';
 import { indiaToday, MAX_MESSAGE_LENGTH, missingJourneyFields, type ChatReply } from '@/lib/chat/contract';
-import { applyBookingReply, bookingPrompt, confirmBooking, createBookingDetails, explicitBookingConfirmation, mergeBookingDetails, NO_BOOKING_UPDATES, pickJourney, startBooking, updateBooking, type BookingDetails, type BookingFlow, type PassengerDetails } from '@/lib/chat/bookingFlow';
+import { applyBookingReply, beginBooking, bookingPrompt, completePayment, confirmBooking, explicitBookingConfirmation, mergeBookingDetails, NO_BOOKING_UPDATES, pickJourney, startBooking, updateBooking, type BookingDetails, type BookingFlow, type PassengerDetails } from '@/lib/chat/bookingFlow';
 import { ChatBookingPanel } from './ChatBookingPanel';
 import { useJourneyChat } from './useJourneyChat';
 import { chatResultContext } from '@/lib/chat/results';
@@ -12,7 +12,6 @@ import { rankJourneys } from '@/lib/ranking/rankJourneys';
 import type { JourneyIntent, JourneyOption, SearchOutcome } from '@/types/journey';
 import { CitySelect } from './CitySelect';
 import { JourneyCard } from './JourneyCard';
-import { IndirectJourneyCard } from './IndirectJourneyCard';
 import { RailChatIcon } from './RailChatIcon';
 import { JourneyTimeline } from './JourneyTimeline';
 import { TravelServices } from './TravelServices';
@@ -20,6 +19,9 @@ import { TravelExtrasPreview } from './TravelExtrasPreview';
 import { itineraryOverview, journeyDate } from '@/lib/journey/itinerary';
 import { JourneyModePicker } from './JourneyModePicker';
 import { hasRoadConnection, resolveRailCity } from '@/lib/data/locations';
+import { buildDecisionResults } from '@/lib/ranking/decisionSupport';
+import { TripIntentSummary } from './TripIntentSummary';
+import { SAMPLE_BAG_RATE } from '@/lib/journey/luggageAssistance';
 
 type Stage = 'home' | 'chat' | 'booking' | 'payment' | 'confirmed';
 type SearchMode = 'describe' | 'structured';
@@ -61,16 +63,8 @@ export function JourneyPlanner() {
   const submitStructured = () => {
     if (!structured.origin || !structured.destination || !structured.date || structured.date < indiaToday() || structured.origin === structured.destination || !Number.isInteger(structured.passengers) || structured.passengers < 1 || structured.passengers > 8) { setError('Choose different locations, a valid travel date and 1–8 travellers.'); return; }
     setError('');
-    setIntent({ originCity: structured.origin, destinationCity: structured.destination, preferredDate: structured.date, flexibilityDays: 0, passengerCount: structured.passengers, seniorTraveller: false, confirmedOnly: false, comfortPreference: 'any', rankingPriority: 'best', journeyMode: 'train_only' });
+    setIntent({ originCity: structured.origin, destinationCity: structured.destination, preferredDate: structured.date, flexibilityDays: 0, passengerCount: structured.passengers, seniorTraveller: false, confirmedOnly: false, comfortPreference: 'any', rankingPriority: 'best', journeyMode: hasRoadConnection(structured.origin) || hasRoadConnection(structured.destination) ? 'complete' : 'train_only' });
     setStage('chat'); track('intent_submitted', { mode: 'structured' });
-  };
-
-  const choose = (journey: JourneyOption) => {
-    setSelected(journey);
-    setBookingDetails(createBookingDetails(intent?.passengerCount ?? 1));
-    setStage('booking');
-    track('journey_selected', { journeyId: journey.id });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const tryDemo = () => { setMode('describe'); setQuery(DEMO_PROMPT); setError(''); document.getElementById('journey-query')?.focus(); };
@@ -91,7 +85,7 @@ export function JourneyPlanner() {
       {sessionError ? <p className="form-error" role="alert">{sessionError}</p> : null}
       {authenticated ? <>
       {stage === 'home' ? <HomeSearch mode={mode} setMode={setMode} query={query} setQuery={setQuery} structured={structured} setStructured={setStructured} error={error} tryDemo={tryDemo} submitAI={submitAI} submitStructured={submitStructured} /> : null}
-      {stage !== 'home' ? <div hidden={stage !== 'chat'}><ConversationWorkspace initialQuery={mode === 'describe' ? query : ''} initialIntent={mode === 'structured' ? intent : null} onIntentChange={setIntent} onChoose={choose} /></div> : null}
+      {stage !== 'home' ? <div hidden={stage !== 'chat'}><ConversationWorkspace initialQuery={mode === 'describe' ? query : ''} initialIntent={mode === 'structured' ? intent : null} onIntentChange={setIntent} /></div> : null}
       {stage === 'booking' && intent && selected && bookingDetails ? <Booking intent={intent} journey={selected} details={bookingDetails} onChange={setBookingDetails} onBack={() => setStage('chat')} onContinue={() => { setStage('payment'); track('traveller_details_completed', { journeyId: selected.id }); window.scrollTo({ top: 0, behavior: 'smooth' }); }} /> : null}
       {stage === 'payment' && intent && selected && bookingDetails ? <Payment intent={intent} journey={selected} details={bookingDetails} onBack={() => setStage('booking')} onPaid={() => { setStage('confirmed'); track('sample_payment_completed', { journeyId: selected.id }); window.scrollTo({ top: 0, behavior: 'smooth' }); }} /> : null}
       {stage === 'confirmed' && intent && selected && bookingDetails ? <Confirmation journey={selected} intent={intent} details={bookingDetails} onHome={reset} /> : null}
@@ -151,7 +145,7 @@ function JourneyDateInput({ value, min, onChange }: { value: string; min: string
 
 type ChatPanel = 'details' | 'searching' | 'results' | 'booking';
 
-function ConversationWorkspace({ initialQuery, initialIntent, onIntentChange, onChoose }: { initialQuery: string; initialIntent?: JourneyIntent | null; onIntentChange: (intent: JourneyIntent) => void; onChoose: (journey: JourneyOption) => void }) {
+function ConversationWorkspace({ initialQuery, initialIntent, onIntentChange }: { initialQuery: string; initialIntent?: JourneyIntent | null; onIntentChange: (intent: JourneyIntent) => void }) {
   const chat = useJourneyChat(initialQuery, initialIntent, handleAssistantReply);
   const { draft, messages, busy, readyToSearch, addAssistant, setWorkflowContext } = chat;
   const [reply, setReply] = useState('');
@@ -168,7 +162,7 @@ function ConversationWorkspace({ initialQuery, initialIntent, onIntentChange, on
   const setBookingState = (value: BookingFlow | null) => { bookingRef.current = value; setBooking(value); };
   const workflowPhase = booking?.phase ?? (panel === 'results' ? 'results' : 'planning');
   useEffect(() => {
-    setWorkflowContext({ phase: workflowPhase, journeyId: booking?.journey.id ?? null, details: booking?.details ?? null, journeySummary: booking ? JSON.stringify({ train: booking.journey.trainName, class: booking.journey.classOption.code, departure: booking.journey.departureDateTime, arrival: booking.journey.arrivalDateTime, fare: booking.journey.totalFare, availability: booking.journey.classOption.status }) : null });
+    setWorkflowContext({ phase: workflowPhase, journeyId: booking?.journey.id ?? null, details: booking?.details ?? null, journeySummary: booking ? JSON.stringify({ train: booking.journey.trainName, class: booking.journey.classOption.code, departure: booking.journey.departureDateTime, arrival: booking.journey.arrivalDateTime, fare: booking.journey.totalFare, availability: booking.journey.classOption.status, extras: booking.phase === 'completed' ? { cabs: 'Ola and Uber links for the departure or arrival station; provider fare and availability apply', food: 'Swiggy Food on Train; a railway PNR is required to see eligible delivery stations', luggage: `Licensed station assistance at an estimated ₹${SAMPLE_BAG_RATE} per bag per station; departure, arrival or both ends can be selected; provider confirmation is required`, parcel: 'Indian Railways parcel and Porter goods links; restrictions, packing, weight and coverage must be checked with the provider; railway enquiries 139' } : null }) : null });
   }, [booking, workflowPhase, setWorkflowContext]);
 
   useEffect(() => { onIntentChange(draft); }, [draft, onIntentChange]);
@@ -203,6 +197,15 @@ function ConversationWorkspace({ initialQuery, initialIntent, onIntentChange, on
     } else if (chat.submit(value)) setReply('');
   };
 
+  const selectJourney = (journey: JourneyOption) => {
+    const flow = startBooking(journey, draft.passengerCount);
+    setBookingState(flow);
+    setPanel('booking');
+    setChatOpen(false);
+    addAssistant(`${journey.trainName} · ${journey.classOption.code} is selected. Review the complete journey on the right, then continue when you are ready.`);
+    track('journey_selected', { journeyId: journey.id, mode: 'conversation' });
+  };
+
   function handleAssistantReply(next: JourneyIntent, response: ChatReply, userText: string, changed: boolean) {
     if (changed) { searchRevision.current += 1; setBookingState(null); setChatOutcome(null); setPanel('details'); }
     const action = response.action;
@@ -214,17 +217,17 @@ function ConversationWorkspace({ initialQuery, initialIntent, onIntentChange, on
       if (!journey) { addAssistant('I couldn’t identify a confirmed recommendation or that class. Please choose one of the journeys on the right.'); return; }
       const flow = startBooking(journey, next.passengerCount);
       const previous = bookingRef.current;
-      // Reselecting a class preserves traveller input but always requires a new review.
-      const updated = updateBooking(flow, mergeBookingDetails(previous?.details ?? flow.details, response.bookingUpdates ?? NO_BOOKING_UPDATES));
-      setBookingState(updated); setPanel('booking'); setChatOpen(true);
-      addAssistant(`${journey.trainName} · ${journey.classOption.code}. ${bookingPrompt(updated)}`); return;
+      const details = mergeBookingDetails(previous?.details ?? flow.details, response.bookingUpdates ?? NO_BOOKING_UPDATES);
+      const updated = { ...flow, details };
+      setBookingState(updated); setPanel('booking'); setChatOpen(false);
+      addAssistant(`${journey.trainName} · ${journey.classOption.code} is selected. Review the complete journey on the right, then continue when you are ready.`); return;
     }
     if (action?.type === 'cancel' && bookingRef.current?.phase !== 'completed') {
       setBookingState(null); setPanel(chatOutcome ? 'results' : 'details'); addAssistant('Selection cleared. You can choose another journey.'); return;
     }
     const current = bookingRef.current;
     if (current && !changed) {
-      if (current.phase === 'completed') { addAssistant(bookingPrompt(current)); return; }
+      if (current.phase === 'completed' || current.phase === 'payment') { addAssistant(response.message); return; }
       const updated = applyBookingReply(current, response.bookingUpdates ?? NO_BOOKING_UPDATES, Boolean(response.needsClarification));
       const edited = JSON.stringify(updated.details) !== JSON.stringify(current.details);
       setBookingState(updated);
@@ -247,7 +250,7 @@ function ConversationWorkspace({ initialQuery, initialIntent, onIntentChange, on
       const payload = await response.json() as { outcome: SearchOutcome; source: DataSource };
       if (revision !== searchRevision.current) return;
       chat.setResultContext(chatResultContext(payload.outcome, payload.source));
-      setChatOutcome(payload.outcome); setSource(payload.source); setPanel('results');
+      setChatOutcome(payload.outcome); setSource(payload.source); setPanel('results'); setChatOpen(false);
       const matches = payload.outcome.options.length + payload.outcome.indirectOptions.length;
       addAssistant(matches ? `I found ${matches} options matching your details. You can compare them on the right.` : 'No exact match for these preferences. Review the alternatives and their trade-offs, or edit the details.');
       track('results_viewed', { resultCount: payload.outcome.options.length, source: payload.source, mode: 'conversation' });
@@ -255,7 +258,7 @@ function ConversationWorkspace({ initialQuery, initialIntent, onIntentChange, on
       if (revision !== searchRevision.current) return;
       const fallback = rankJourneys(searchDraft);
       chat.setResultContext(chatResultContext(fallback, 'sample'));
-      setChatOutcome(fallback); setSource('sample'); setPanel('results');
+      setChatOutcome(fallback); setSource('sample'); setPanel('results'); setChatOpen(false);
       const matches = fallback.options.length + fallback.indirectOptions.length;
       addAssistant(matches ? `I found ${matches} options matching your details.` : 'No exact match. You can review the alternatives or change your details.');
     }
@@ -281,15 +284,15 @@ function ConversationWorkspace({ initialQuery, initialIntent, onIntentChange, on
     <aside className="journey-panel" aria-label={panel === 'results' ? 'Train search results' : panel === 'booking' ? 'Booking review' : 'Journey details'}>
       {panel === 'details' ? <ChatTripDetails intent={draft} ready={readyToSearch && !busy} onChange={updateDraft} onSearch={() => void searchFromChat()} /> : null}
       {panel === 'searching' ? <div className="panel-searching" role="status"><span className="simple-loader"><TrainFront size={23} /></span><h2>Finding trains</h2><p>{draft.originCity} → {draft.destinationCity}</p></div> : null}
-      {panel === 'results' && chatOutcome ? <fieldset className="chat-results-lock" disabled={busy} aria-busy={busy}><ConversationResults intent={draft} outcome={chatOutcome} source={source} onEdit={() => { setPanel('details'); addAssistant('Update anything on the right, then search again.'); }} onChoose={onChoose} /></fieldset> : null}
-      {panel === 'booking' && booking ? <ChatBookingPanel flow={booking} intent={draft} busy={busy} onChange={(details) => { chat.invalidate(); setBookingState({ ...booking, details, phase: 'collecting', reviewKey: null }); }} onReview={() => { const next = updateBooking(booking, booking.details); setBookingState(next); addAssistant(bookingPrompt(next)); setChatOpen(true); }} onBack={() => { chat.invalidate(); setBookingState(null); setPanel('results'); addAssistant('Choose another journey, or tell me which one you prefer.'); }} /> : null}
+      {panel === 'results' && chatOutcome ? <fieldset className="chat-results-lock" disabled={busy} aria-busy={busy}><ConversationResults intent={draft} outcome={chatOutcome} source={source} onViewConversation={() => setChatOpen(true)} onRerank={(next) => chat.updateDraft(next, true)} onEdit={() => { setPanel('details'); setChatOpen(true); addAssistant('Update anything on the right, then find journeys again.'); }} onChoose={selectJourney} /></fieldset> : null}
+      {panel === 'booking' && booking ? <ChatBookingPanel flow={booking} intent={draft} busy={busy} onChange={(details) => { chat.invalidate(); setBookingState({ ...booking, details, phase: 'collecting', reviewKey: null }); }} onContinue={() => { setBookingState(beginBooking(booking)); setChatOpen(true); addAssistant('Now add the traveller and contact details. You can type them here or use the form.'); }} onReview={() => { const next = updateBooking(booking, booking.details); setBookingState(next); addAssistant(bookingPrompt(next)); setChatOpen(true); }} onPaid={() => { const next = completePayment(booking); setBookingState(next); setChatOpen(true); addAssistant(bookingPrompt(next)); }} onBack={() => { chat.invalidate(); setBookingState(null); setPanel('results'); addAssistant('Choose another journey, or tell me which one you prefer.'); }} /> : null}
     </aside>
   </section>;
 }
 
 function ChatTripDetails({ intent, ready, onChange, onSearch }: { intent: JourneyIntent; ready: boolean; onChange: (intent: JourneyIntent) => void; onSearch: () => void }) {
   const set = <K extends keyof JourneyIntent>(key: K, value: JourneyIntent[K]) => onChange({ ...intent, [key]: value });
-  return <div className="chat-trip-details"><p className="section-label">Your journey</p><div className="panel-title"><h2>Trip details</h2><span>{missingJourneyFields(intent).length ? 'Needs details' : ready ? 'Ready to search' : 'Review details'}</span></div>
+  return <div className="chat-trip-details"><p className="section-label">What we understood</p><div className="panel-title"><h2>{intent.originCity && intent.destinationCity ? `${intent.originCity} → ${intent.destinationCity}` : 'Review your trip'}</h2><span>{missingJourneyFields(intent).length ? 'Needs details' : ready ? 'Ready to search' : 'Review details'}</span></div>
     <div className="chat-detail-grid"><label>From<CitySelect value={intent.originCity} exclude={intent.destinationCity} onChange={(city) => set('originCity', city)} /></label><label>To<CitySelect value={intent.destinationCity} exclude={intent.originCity} onChange={(city) => set('destinationCity', city)} /></label><label>Date<JourneyDateInput min={indiaToday()} value={intent.preferredDate} onChange={(date) => set('preferredDate', date)} /></label><label>Travellers<input type="number" min="1" max="8" value={intent.passengerCount || ''} onChange={(event) => set('passengerCount', event.target.value ? Number(event.target.value) : 0)} /></label></div>
     <div className="chat-preferences"><label><input type="checkbox" checked={intent.confirmedOnly} onChange={(event) => set('confirmedOnly', event.target.checked)} /> Confirmed seats</label><label><input type="checkbox" checked={intent.seniorTraveller} onChange={(event) => set('seniorTraveller', event.target.checked)} /> Senior traveller</label></div>
     <JourneyModePicker intent={intent} onChange={onChange} compact />
@@ -303,39 +306,24 @@ function ChatTripDetails({ intent, ready, onChange, onSearch }: { intent: Journe
       <label>Preferred class<select value={intent.preferredClass ?? ''} onChange={(event) => set('preferredClass', event.target.value || undefined)}><option value="">Any class</option><option value="1A">1A · First AC</option><option value="2A">2A · Second AC</option><option value="3A">3A · Third AC</option><option value="3E">3E · AC Economy</option><option value="CC">CC · AC Chair Car</option><option value="SL">SL · Sleeper</option><option value="2S">2S · Second Sitting</option></select></label>
     </div></details>
     <label className="chat-priority">Priority<select value={intent.rankingPriority} onChange={(event) => set('rankingPriority', event.target.value as JourneyIntent['rankingPriority'])}><option value="best">Best overall</option><option value="confirmation">Seat confirmation</option><option value="price">Lowest fare</option><option value="duration">Shortest time</option><option value="arrival">Arrival time</option></select></label>
-    <button className="primary-button panel-search-button" type="button" onClick={onSearch} disabled={!ready}>Search trains <ArrowRight size={17} /></button>
+    <button className="primary-button panel-search-button" type="button" onClick={onSearch} disabled={!ready}>Find journeys <ArrowRight size={17} /></button>
   </div>;
 }
 
-function ConversationResults({ intent, outcome, source, onEdit, onChoose }: { intent: JourneyIntent; outcome: SearchOutcome; source: DataSource; onEdit: () => void; onChoose: (journey: JourneyOption) => void }) {
-  return <div className="conversation-results"><div className="conversation-results-head"><button className="back-link" type="button" onClick={onEdit}><ArrowLeft size={15} /> Details</button><div><p className="section-label">Best options</p><h2>{intent.originCity} → {intent.destinationCity}</h2><span>{formatTravelDate(intent.preferredDate)} · {intent.passengerCount} travellers</span><TravelExtrasPreview /></div></div>
-    <JourneyModeNotice intent={intent} />
-    {outcome.options.length ? <div className="journey-list">{outcome.options.map((journey, index) => <JourneyCard key={journey.id} journey={journey} index={index} onChoose={onChoose} />)}</div> : <div className="panel-empty"><Search size={25} /><h2>No direct match</h2><p>Change the date or cities and try again.</p></div>}
-    {outcome.otherOptions.length ? <OtherJourneyOptions journeys={outcome.otherOptions} startIndex={outcome.options.length} onChoose={onChoose} /> : null}
-    {outcome.indirectOptions.length ? <IndirectJourneyOptions journeys={outcome.indirectOptions} onChoose={onChoose} /> : null}
+function ConversationResults({ intent, outcome, source, onEdit, onViewConversation, onRerank, onChoose }: { intent: JourneyIntent; outcome: SearchOutcome; source: DataSource; onEdit: () => void; onViewConversation: () => void; onRerank: (intent: JourneyIntent) => void; onChoose: (journey: JourneyOption) => void }) {
+  const decision = buildDecisionResults(outcome, intent);
+  return <div className="conversation-results"><TripIntentSummary intent={intent} journey={decision.top[0]?.journey} onEdit={onEdit} onViewConversation={onViewConversation} onPriorityChange={onRerank} />
+    <div className="decision-header"><p className="section-label">Best-fit journeys</p><h1>We found {decision.practicalCount} practical {decision.practicalCount === 1 ? 'journey' : 'journeys'}.</h1><p>{decision.top.length === 3 ? 'These 3 are the best fit.' : 'Here are the best available choices.'}</p><div className="priority-chips">{decision.priorities.map((item) => <span key={item}><Check size={12} /> {item}</span>)}</div><small>{decision.scope}</small><TravelExtrasPreview /></div>
+    {decision.top.length ? <div className="journey-list">{decision.top.map((item, index) => <JourneyCard key={item.journey.id} journey={item.journey} index={index} onChoose={onChoose} decision={item} />)}</div> : <div className="panel-empty"><Search size={25} /><h2>No direct train fits these priorities</h2><p>We could not build a practical nearby-station journey for this date. Edit the trip to widen the date or availability preferences.</p></div>}
+    {decision.other.length ? <OtherPresentedOptions journeys={decision.other} startIndex={decision.top.length} onChoose={onChoose} /> : null}
     <p className="data-note">{source === 'railradar' ? 'Timetables use RailRadar. Confirm fares and seat availability before booking.' : 'Planning estimates only. Check current schedules, fares and availability before booking.'}</p>
   </div>;
 }
 
-function needsRoadChoice(intent: JourneyIntent) {
-  return hasRoadConnection(intent.originCity) || hasRoadConnection(intent.destinationCity);
+function OtherPresentedOptions({ journeys, startIndex, onChoose }: { journeys: ReturnType<typeof buildDecisionResults>['other']; startIndex: number; onChoose: (journey: JourneyOption) => void }) {
+  return <details className="other-options"><summary>Other options · why they ranked lower <span>{journeys.length}</span></summary><div className="other-options-list">{journeys.map((item, index) => <JourneyCard key={item.journey.id} journey={item.journey} index={startIndex + index} onChoose={onChoose} isOtherOption decision={item} />)}</div></details>;
 }
 
-function JourneyModeNotice({ intent }: { intent: JourneyIntent }) {
-  if (!needsRoadChoice(intent)) return null;
-  const originRail = resolveRailCity(intent.originCity, intent.originRailCity);
-  const destinationRail = resolveRailCity(intent.destinationCity, intent.destinationRailCity);
-  const railRoute = `${originRail} → ${destinationRail}`;
-  return <div className={`journey-mode-notice ${intent.journeyMode === 'complete' ? 'complete' : ''}`}><span>{intent.journeyMode === 'complete' ? <BusFront size={18} /> : <TrainFront size={18} />}</span><div><strong>{intent.journeyMode === 'complete' ? 'Complete journey suggestions' : 'Train-only results'}</strong><p>{intent.journeyMode === 'complete' ? `Bus connections and transfer time are included with the ${railRoute} train.` : `Showing trains for ${railRoute}. You’ll arrange the rest of the journey.`}</p></div></div>;
-}
-
-function OtherJourneyOptions({ journeys, startIndex, onChoose }: { journeys: JourneyOption[]; startIndex: number; onChoose: (journey: JourneyOption) => void }) {
-  return <details className="other-options" open><summary>Other options <span>{journeys.length}</span></summary><div className="other-options-list">{journeys.map((journey, index) => <JourneyCard key={journey.id} journey={journey} index={startIndex + index} onChoose={onChoose} isOtherOption />)}</div></details>;
-}
-
-function IndirectJourneyOptions({ journeys, onChoose }: { journeys: JourneyOption[]; onChoose: (journey: JourneyOption) => void }) {
-  return <section className="indirect-options" aria-labelledby="indirect-options-title"><div className="indirect-options-heading"><div><p className="section-label">More ways to travel</p><h2 id="indirect-options-title">Journeys with one change</h2></div><span>{journeys.length} {journeys.length === 1 ? 'option' : 'options'}</span></div><p className="indirect-options-intro">Useful when direct timings or availability do not work. Each leg is shown separately.</p><div className="indirect-options-list">{journeys.map((journey) => <IndirectJourneyCard key={journey.id} journey={journey} onChoose={onChoose} />)}</div></section>;
-}
 
 function Booking({ intent, journey, details, onChange, onBack, onContinue }: { intent: JourneyIntent; journey: JourneyOption; details: BookingDetails; onChange: (details: BookingDetails) => void; onBack: () => void; onContinue: () => void }) {
   const updatePassenger = (index: number, key: keyof PassengerDetails, value: string) => onChange({ ...details, passengers: details.passengers.map((passenger, passengerIndex) => passengerIndex === index ? { ...passenger, [key]: value } : passenger) });
@@ -380,5 +368,3 @@ function Confirmation({ journey, intent, details, onHome }: { journey: JourneyOp
   const reference = `RE${journey.trainNumber.slice(-4)}${intent.passengerCount}X`;
   return <section className="confirmation-screen screen-shell"><CheckoutSteps current="confirmed" /><div className="confirmation-mark"><TicketCheck size={36} /></div><p className="screen-kicker">Journey summary</p><h1>Your journey is ready.</h1><p>Contact: {details.email} · {details.phone}</p><div className="confirmation-reference"><span>Journey reference</span><strong>{reference}</strong><small>Not a travel ticket · Confirm booking with the provider</small></div><SelectedJourney journey={journey} intent={intent} /><TravelServices journey={journey} /><div className="confirmation-actions"><button className="primary-button" type="button" onClick={onHome}>Plan another journey</button></div></section>;
 }
-
-const formatTravelDate = (date: string) => new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${date}T00:00:00Z`));

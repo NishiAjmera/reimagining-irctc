@@ -91,10 +91,10 @@ export function useJourneyChat(initialQuery: string, initialIntent?: JourneyInte
     return true;
   };
 
-  const updateDraft = (next: JourneyIntent) => {
+  const updateDraft = (next: JourneyIntent, preserveResultContext = false) => {
     // Manual edits are authoritative; late responses cannot undo them.
     version.current += 1; controller.current?.abort(); busyRef.current = false;
-    resultContext.current = undefined;
+    if (!preserveResultContext) resultContext.current = undefined;
     setNeedsClarification(false);
     const changed = applyIntentPatch(next, {});
     draftRef.current = changed; setDraft(changed); setBusy(false); setError(''); setRetryable(false); setSuggestions([]); failedRequest.current = null;

@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { TravelExtrasPreview } from '@/components/journey/TravelExtrasPreview';
 import { ChatBookingPanel } from '@/components/journey/ChatBookingPanel';
-import { confirmBooking, startBooking, updateBooking } from '@/lib/chat/bookingFlow';
+import { completePayment, confirmBooking, startBooking, updateBooking } from '@/lib/chat/bookingFlow';
 import { emptyJourneyDraft } from '@/lib/chat/contract';
 import { rankJourneys } from '@/lib/ranking/rankJourneys';
 
@@ -11,7 +11,7 @@ const intent = { ...emptyJourneyDraft(), originCity: 'Mumbai', destinationCity: 
 const journey = rankJourneys(intent).options[0];
 const collecting = startBooking(journey, 1);
 const review = updateBooking(collecting, { passengers: [{ name: 'Asha Test', age: '32', gender: 'Female', berth: 'No preference' }], email: 'travel@example.test', phone: '9000000000' });
-const renderPanel = (flow: typeof collecting) => renderToStaticMarkup(createElement(ChatBookingPanel, { flow, intent, busy: false, onChange: () => {}, onReview: () => {}, onBack: () => {} }));
+const renderPanel = (flow: typeof collecting) => renderToStaticMarkup(createElement(ChatBookingPanel, { flow, intent, busy: false, onChange: () => {}, onContinue: () => {}, onReview: () => {}, onPaid: () => {}, onBack: () => {} }));
 
 describe('travel extras discovery', () => {
   it('names all four extras and their location without offering premature booking controls', () => {
@@ -28,7 +28,7 @@ describe('travel extras discovery', () => {
     expect(html).not.toContain('class="travel-service-options"');
   });
   it('replaces the preview with the actual extras on confirmation', () => {
-    const html = renderPanel(confirmBooking(review, 'Confirm booking', 'RE-TEST'));
+    const html = renderPanel(completePayment(confirmBooking(review, 'Confirm booking', 'RE-TEST')));
     expect(html).not.toContain('class="travel-extras-preview"');
     expect(html).toContain('class="travel-service-options"');
   });

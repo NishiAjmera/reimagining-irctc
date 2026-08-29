@@ -7,7 +7,7 @@ export type ChatAction = { type: 'none' | 'search' | 'select' | 'cancel' | 'conf
 export const NO_ACTION: ChatAction = { type: 'none', journeyId: null, classCode: null };
 export type BookingUpdates = { passengers: Array<{ index: number; name: string | null; age: string | null; gender: string | null; berth: string | null }>; email: string | null; phone: string | null };
 export const NO_BOOKING_UPDATES: BookingUpdates = { passengers: [], email: null, phone: null };
-export type BookingFlow = { phase: 'collecting' | 'review' | 'completed'; journey: JourneyOption; details: BookingDetails; reviewKey: string | null; reference: string | null };
+export type BookingFlow = { phase: 'selected' | 'collecting' | 'review' | 'payment' | 'completed'; journey: JourneyOption; details: BookingDetails; reviewKey: string | null; reference: string | null };
 export type WorkflowContext = { phase: 'planning' | 'results' | BookingFlow['phase']; journeyId: string | null; details: BookingDetails | null; journeySummary: string | null };
 const record = (value: unknown): value is Record<string, unknown> => Boolean(value && typeof value === 'object' && !Array.isArray(value));
 export const genders = ['Female', 'Male', 'Non-binary', 'Prefer not to say'];
@@ -39,7 +39,7 @@ export function readBookingUpdates(value: unknown): BookingUpdates {
 
 export function readWorkflow(value: unknown): WorkflowContext | undefined {
   if (value === undefined) return undefined;
-  if (!record(value) || !['planning', 'results', 'collecting', 'review', 'completed'].includes(String(value.phase)) || !(value.journeyId === null || typeof value.journeyId === 'string' && value.journeyId.length <= 200) || !(value.journeySummary === null || typeof value.journeySummary === 'string' && value.journeySummary.length <= 5000)) throw new Error('Invalid workflow');
+  if (!record(value) || !['planning', 'results', 'selected', 'collecting', 'review', 'payment', 'completed'].includes(String(value.phase)) || !(value.journeyId === null || typeof value.journeyId === 'string' && value.journeyId.length <= 200) || !(value.journeySummary === null || typeof value.journeySummary === 'string' && value.journeySummary.length <= 5000)) throw new Error('Invalid workflow');
   let details: BookingDetails | null = null;
   if (value.details !== null) {
     if (!record(value.details) || !Array.isArray(value.details.passengers) || value.details.passengers.length < 1 || value.details.passengers.length > 8) throw new Error('Invalid booking');
@@ -75,15 +75,18 @@ export function nextBookingQuestion(details: BookingDetails): string | null {
 
 export const reviewFingerprint = (journey: JourneyOption, details: BookingDetails) => JSON.stringify({ journey, details });
 export function startBooking(journey: JourneyOption, count: number): BookingFlow {
-  return { phase: 'collecting', journey, details: createBookingDetails(count), reviewKey: null, reference: null };
+  return { phase: 'selected', journey, details: createBookingDetails(count), reviewKey: null, reference: null };
+}
+export function beginBooking(flow: BookingFlow): BookingFlow {
+  return flow.phase === 'selected' ? { ...flow, phase: 'collecting' } : flow;
 }
 export function updateBooking(flow: BookingFlow, details: BookingDetails): BookingFlow {
-  if (flow.phase === 'completed') return flow;
+  if (flow.phase === 'payment' || flow.phase === 'completed') return flow;
   return { ...flow, details, phase: nextBookingQuestion(details) ? 'collecting' : 'review', reviewKey: nextBookingQuestion(details) ? null : reviewFingerprint(flow.journey, details) };
 }
 
 export function applyBookingReply(flow: BookingFlow, updates: BookingUpdates, needsClarification: boolean): BookingFlow {
-  if (flow.phase === 'completed') return flow;
+  if (flow.phase === 'payment' || flow.phase === 'completed') return flow;
   const next = updateBooking(flow, mergeBookingDetails(flow.details, updates));
   // A follow-up question must not discard the details already supplied.
   return needsClarification ? { ...next, phase: 'collecting', reviewKey: null } : next;
@@ -92,11 +95,15 @@ export function applyBookingReply(flow: BookingFlow, updates: BookingUpdates, ne
 /** Only an unambiguous reply AFTER the exact review was shown can finish. */
 export function explicitBookingConfirmation(text: string): boolean {
   const normalized = text.toLowerCase().trim().replace(/[.!]+$/, '').replace(/\s+/g, ' ');
-  return /^(?:please )?(?:confirm (?:the |my )?booking|yes[, ]+(?:please[, ]+)?(?:confirm (?:the |my )?booking|book (?:it|this journey)|go ahead and book(?: it)?)|go ahead and book(?: it)?|book (?:it|this journey)|haan[, ]+book kar do)$/.test(normalized);
+  if (/\b(?:not|don't|do not|if|but|change|later|tomorrow)\b|\?$/.test(normalized)) return false;
+  return /^(?:yes|yes please|yep|sure|okay|ok|confirm|confirmed|conform|looks good|sounds good|all good|perfect|proceed|continue|go ahead|let's do it|please proceed|please confirm|just confirm|just book it|book now|pay and book|conform booking|confirm (?:the |my )?booking|yes[, ]+(?:please[, ]+)?(?:confirm (?:the |my )?booking|book (?:it|this journey)|go ahead and book(?: it)?)|go ahead and book(?: it)?|book (?:it|this journey)|haan[, ]+book kar do)$/.test(normalized);
 }
 export function confirmBooking(flow: BookingFlow, text: string, reference: string): BookingFlow {
   if (flow.phase !== 'review' || !explicitBookingConfirmation(text) || nextBookingQuestion(flow.details) || flow.reviewKey !== reviewFingerprint(flow.journey, flow.details)) return flow;
-  return { ...flow, phase: 'completed', reference };
+  return { ...flow, phase: 'payment', reference };
+}
+export function completePayment(flow: BookingFlow): BookingFlow {
+  return flow.phase === 'payment' ? { ...flow, phase: 'completed' } : flow;
 }
 
 export function pickJourney(outcome: SearchOutcome, action: ChatAction): JourneyOption | null {
@@ -112,6 +119,7 @@ export function pickJourney(outcome: SearchOutcome, action: ChatAction): Journey
 }
 
 export function bookingPrompt(flow: BookingFlow): string {
-  if (flow.phase === 'completed') return 'Your journey summary is ready on the right. Complete ticketing with the booking provider; no payment has been taken.';
-  return nextBookingQuestion(flow.details) ?? 'Please check the final journey, travellers, contact details and total on the right. Reply “Confirm booking” to finish, or tell me what to change.';
+  if (flow.phase === 'completed') return 'Your journey summary is ready. You can also ask me about cabs, food delivery, luggage assistance or parcel services for this trip.';
+  if (flow.phase === 'payment') return 'Everything is confirmed. Choose a payment method on the right to complete the booking flow.';
+  return nextBookingQuestion(flow.details) ?? 'Please check the final journey, travellers, contact details and total on the right. When it looks right, say “book it”, “confirm”, “looks good”, or tell me what to change.';
 }

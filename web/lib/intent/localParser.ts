@@ -1,4 +1,5 @@
 import type { JourneyIntent } from '@/types/journey';
+import { hasRoadConnection } from '@/lib/data/locations';
 
 export const DEMO_DATE = '2026-08-28';
 
@@ -31,7 +32,7 @@ export class LocalIntentParser {
     return {
       originCity: cities[0] ?? '',
       destinationCity: cities[1] ?? '',
-      journeyMode: /(?:include|add|with).*(?:bus|road)|complete journey|door[ -]to[ -]door/i.test(input) ? 'complete' : 'train_only',
+      journeyMode: /train only|only train/i.test(input) ? 'train_only' : (/(?:include|add|with).*(?:bus|road)|complete journey|door[ -]to[ -]door/i.test(input) || cities.some(hasRoadConnection) ? 'complete' : 'train_only'),
       preferredDate: /next friday|28(?:th)? august|28 aug/i.test(input) ? DEMO_DATE : '2026-08-29',
       flexibilityDays: /next friday|flexible|nearby dates?|weekend/i.test(input) ? 1 : 0,
       arrivalBefore: hour !== undefined ? `${String(hour).padStart(2, '0')}:${arrivalMatch?.[2] ?? '00'}` : undefined,
